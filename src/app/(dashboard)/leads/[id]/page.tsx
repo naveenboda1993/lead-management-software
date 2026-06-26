@@ -102,11 +102,20 @@ export default function LeadDetailPage() {
 
   const handleUpdate = async (data: CreateLeadInput) => {
     try {
-      await updateLead.mutateAsync({ id: leadId, ...data });
+      const payload = {
+        ...data,
+        company: data.company || null,
+        job_title: data.job_title || null,
+        industry: data.industry || null,
+        notes: data.notes || null,
+        estimated_deal_value: data.estimated_deal_value ?? null,
+        tags: data.tags?.length ? data.tags : null,
+      };
+      await updateLead.mutateAsync({ id: leadId, ...payload });
       toast.success("Lead updated successfully");
       setEditing(false);
-    } catch {
-      toast.error("Failed to update lead");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update lead");
     }
   };
 
@@ -235,7 +244,7 @@ export default function LeadDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-bold tracking-tight">
                 {lead.first_name} {lead.last_name}
               </h1>
@@ -534,9 +543,9 @@ export default function LeadDetailPage() {
                       </div>
                       <Badge
                         variant={
-                          task.status === "COMPLETED"
+                          task.status === "completed"
                             ? "default"
-                            : task.status === "CANCELLED"
+                            : task.status === "cancelled"
                               ? "destructive"
                               : "outline"
                         }

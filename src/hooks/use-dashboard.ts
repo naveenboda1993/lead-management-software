@@ -57,11 +57,11 @@ async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
     .select("*");
 
   const allTasks = (tasks ?? []) as Task[];
-  const tasksCompleted = allTasks.filter((t) => t.status === "COMPLETED").length;
-  const tasksPending = allTasks.filter((t) => t.status === "PENDING").length;
+  const tasksCompleted = allTasks.filter((t) => t.status === "completed").length;
+  const tasksPending = allTasks.filter((t) => t.status === "pending").length;
 
   const upcomingTasks = allTasks
-    .filter((t) => t.status === "PENDING")
+    .filter((t) => t.status === "pending")
     .sort((a, b) => {
       if (!a.due_date) return 1;
       if (!b.due_date) return -1;

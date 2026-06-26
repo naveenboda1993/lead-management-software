@@ -86,7 +86,7 @@ export default function TicketDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold">{ticket.title}</h1>
             <Badge className={TICKET_STATUS_COLORS[ticket.status]} variant="outline">
               {TICKET_STATUS_LABELS[ticket.status]}

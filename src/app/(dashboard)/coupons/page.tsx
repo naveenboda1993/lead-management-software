@@ -238,7 +238,7 @@ export default function CouponsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Coupons</h1>
           <p className="text-muted-foreground">Manage discount coupons for orders</p>
@@ -258,10 +258,10 @@ export default function CouponsPage() {
       )}
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Add Coupon</DialogTitle></DialogHeader>
           <div className="grid gap-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Code</Label>
                 <Input placeholder="e.g. SUMMER20" value={formData.code} onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value.toUpperCase() }))} />
@@ -283,7 +283,7 @@ export default function CouponsPage() {
               <Label className="text-xs">Description</Label>
               <Input placeholder="Description" value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Discount Value</Label>
                 <Input type="number" placeholder="e.g. 20" value={formData.discount_value} onChange={(e) => setFormData((p) => ({ ...p, discount_value: Number(e.target.value) }))} />
@@ -293,7 +293,7 @@ export default function CouponsPage() {
                 <Input type="number" placeholder="Leave empty for no max" value={formData.max_discount_amount} onChange={(e) => setFormData((p) => ({ ...p, max_discount_amount: e.target.value }))} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Min Order Amount</Label>
                 <Input type="number" placeholder="0" value={formData.min_order_amount} onChange={(e) => setFormData((p) => ({ ...p, min_order_amount: Number(e.target.value) }))} />
@@ -303,7 +303,7 @@ export default function CouponsPage() {
                 <Input type="number" placeholder="100" value={formData.usage_limit} onChange={(e) => setFormData((p) => ({ ...p, usage_limit: Number(e.target.value) }))} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Valid From</Label>
                 <Input type="date" value={formData.valid_from} onChange={(e) => setFormData((p) => ({ ...p, valid_from: e.target.value }))} />
@@ -325,10 +325,10 @@ export default function CouponsPage() {
       </Dialog>
 
       <Dialog open={editDialogOpen} onOpenChange={(o) => { if (!o) setEditCoupon(null); setEditDialogOpen(o); }}>
-        <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Edit Coupon</DialogTitle></DialogHeader>
           <div className="grid gap-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Code</Label>
                 <Input placeholder="e.g. SUMMER20" value={formData.code} onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value.toUpperCase() }))} />
@@ -350,7 +350,7 @@ export default function CouponsPage() {
               <Label className="text-xs">Description</Label>
               <Input placeholder="Description" value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Discount Value</Label>
                 <Input type="number" placeholder="e.g. 20" value={formData.discount_value} onChange={(e) => setFormData((p) => ({ ...p, discount_value: Number(e.target.value) }))} />
@@ -360,7 +360,7 @@ export default function CouponsPage() {
                 <Input type="number" placeholder="Leave empty for no max" value={formData.max_discount_amount} onChange={(e) => setFormData((p) => ({ ...p, max_discount_amount: e.target.value }))} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Min Order Amount</Label>
                 <Input type="number" placeholder="0" value={formData.min_order_amount} onChange={(e) => setFormData((p) => ({ ...p, min_order_amount: Number(e.target.value) }))} />
@@ -370,7 +370,7 @@ export default function CouponsPage() {
                 <Input type="number" placeholder="100" value={formData.usage_limit} onChange={(e) => setFormData((p) => ({ ...p, usage_limit: Number(e.target.value) }))} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Valid From</Label>
                 <Input type="date" value={formData.valid_from} onChange={(e) => setFormData((p) => ({ ...p, valid_from: e.target.value }))} />

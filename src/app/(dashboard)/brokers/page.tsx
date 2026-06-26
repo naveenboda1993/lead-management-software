@@ -171,7 +171,7 @@ export default function BrokersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Brokers</h1>
           <p className="text-muted-foreground">Manage real estate brokers and commission rates</p>
@@ -198,7 +198,7 @@ export default function BrokersPage() {
               <Label className="text-xs">Name</Label>
               <Input placeholder="Broker name" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Email</Label>
                 <Input placeholder="Email" value={formData.email} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} />
@@ -231,7 +231,7 @@ export default function BrokersPage() {
               <Label className="text-xs">Name</Label>
               <Input placeholder="Broker name" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Email</Label>
                 <Input placeholder="Email" value={formData.email} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} />

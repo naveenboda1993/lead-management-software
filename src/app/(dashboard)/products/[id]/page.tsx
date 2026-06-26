@@ -85,11 +85,11 @@ export default function ProductDetailPage() {
           <CardContent className="pt-6 space-y-4">
             <Input placeholder="Name" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} />
             <Input placeholder="SKU" value={formData.sku} onChange={(e) => setFormData((p) => ({ ...p, sku: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input type="number" placeholder="Price" value={formData.price || ""} onChange={(e) => setFormData((p) => ({ ...p, price: Number(e.target.value) }))} />
               <Input type="number" placeholder="Cost Price" value={formData.cost_price || ""} onChange={(e) => setFormData((p) => ({ ...p, cost_price: Number(e.target.value) }))} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input placeholder="Size" value={formData.size} onChange={(e) => setFormData((p) => ({ ...p, size: e.target.value }))} />
               <Input placeholder="Color" value={formData.color} onChange={(e) => setFormData((p) => ({ ...p, color: e.target.value }))} />
               <Input placeholder="Material" value={formData.material} onChange={(e) => setFormData((p) => ({ ...p, material: e.target.value }))} />
@@ -106,20 +106,22 @@ export default function ProductDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/products")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">{product.name}</h1>
-            <Badge variant={product.is_active ? "default" : "secondary"}>
-              {product.is_active ? "Active" : "Inactive"}
-            </Badge>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Button variant="ghost" size="icon" onClick={() => router.push("/products")}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-bold truncate">{product.name}</h1>
+              <Badge variant={product.is_active ? "default" : "secondary"}>
+                {product.is_active ? "Active" : "Inactive"}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground truncate">{product.sku} · {PRODUCT_CATEGORY_LABELS[product.category]}</p>
           </div>
-          <p className="text-sm text-muted-foreground">{product.sku} · {PRODUCT_CATEGORY_LABELS[product.category]}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleEdit} className="ml-auto">Edit</Button>
+        <Button variant="outline" size="sm" onClick={handleEdit} className="shrink-0">Edit</Button>
       </div>
 
       <Tabs defaultValue="details" className="space-y-4">

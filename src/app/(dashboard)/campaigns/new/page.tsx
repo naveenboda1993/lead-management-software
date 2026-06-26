@@ -78,7 +78,7 @@ export default function NewCampaignPage() {
             value={formData.name}
             onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select
               value={formData.type}
               onValueChange={(v) => setFormData((p) => ({ ...p, type: v }))}

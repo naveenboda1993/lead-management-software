@@ -134,7 +134,7 @@ export default function PropertiesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Properties</h1>
           <p className="text-muted-foreground">Manage your real estate properties</p>
@@ -220,7 +220,7 @@ export default function PropertiesPage() {
               value={formData.property_name}
               onChange={(e) => setFormData((p: any) => ({ ...p, property_name: e.target.value }))}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Select
                 value={formData.property_type}
                 onValueChange={(v) => setFormData((p: any) => ({ ...p, property_type: v }))}
@@ -244,7 +244,7 @@ export default function PropertiesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input
                 type="number" placeholder="Price"
                 value={formData.price || ""}
@@ -266,7 +266,7 @@ export default function PropertiesPage() {
               value={formData.location}
               onChange={(e) => setFormData((p: any) => ({ ...p, location: e.target.value }))}
             />
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input
                 placeholder="City"
                 value={formData.city}

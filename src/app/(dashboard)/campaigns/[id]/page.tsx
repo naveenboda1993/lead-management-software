@@ -51,7 +51,7 @@ export default function CampaignDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold">{campaign.name}</h1>
             <Badge className={CAMPAIGN_STATUS_COLORS[campaign.status]} variant="outline">
               {CAMPAIGN_STATUS_LABELS[campaign.status]}

@@ -78,7 +78,7 @@ export default function GoogleAdCampaignDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold">{campaign.name}</h1>
             <Badge variant="outline">{campaign.status}</Badge>
           </div>

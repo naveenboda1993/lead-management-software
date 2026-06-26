@@ -163,7 +163,7 @@ export default function MarketingDashboardPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-6 py-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-6">
                 <div className="flex flex-col items-center gap-2 rounded-lg border p-6">
                   <DollarSign className="h-8 w-8 text-primary" />
                   <span className="text-3xl font-bold">

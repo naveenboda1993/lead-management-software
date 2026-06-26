@@ -46,7 +46,7 @@ export default function OrderDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold">Order {order.order_number}</h1>
             <Badge className={ORDER_STATUS_COLORS[order.status]} variant="outline">
               {ORDER_STATUS_LABELS[order.status]}
@@ -61,8 +61,8 @@ export default function OrderDetailPage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Order Items</CardTitle></CardHeader>
             <CardContent>
-              <div className="rounded-md border">
-                <table className="w-full">
+              <div className="rounded-md border overflow-x-auto">
+                <table className="w-full min-w-[400px]">
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="text-left p-2 text-xs font-medium">Product</th>

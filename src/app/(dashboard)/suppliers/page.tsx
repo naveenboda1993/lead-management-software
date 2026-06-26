@@ -92,7 +92,7 @@ export default function SuppliersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Suppliers</h1>
           <p className="text-muted-foreground">Manage your suppliers</p>
@@ -121,13 +121,13 @@ export default function SuppliersPage() {
           <DialogHeader><DialogTitle>Add Supplier</DialogTitle></DialogHeader>
           <div className="grid gap-4">
             <Input placeholder="Name" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input placeholder="Email" value={formData.email} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} />
               <Input placeholder="Phone" value={formData.phone} onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))} />
             </div>
             <Input placeholder="Company" value={formData.company} onChange={(e) => setFormData((p) => ({ ...p, company: e.target.value }))} />
             <Input placeholder="Address" value={formData.address} onChange={(e) => setFormData((p) => ({ ...p, address: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input placeholder="Payment Terms" value={formData.payment_terms} onChange={(e) => setFormData((p) => ({ ...p, payment_terms: e.target.value }))} />
               <Input type="number" placeholder="Lead Time (days)" value={formData.lead_time_days} onChange={(e) => setFormData((p) => ({ ...p, lead_time_days: Number(e.target.value) }))} />
             </div>

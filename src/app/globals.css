@@ -186,3 +186,28 @@
   background: hsl(var(--color-primary) / 0.2);
   color: hsl(var(--color-primary));
 }
+
+@utility container-custom {
+  @apply w-full px-4 sm:px-6 lg:px-8 mx-auto;
+}
+
+@utility page-header {
+  @apply flex flex-col sm:flex-row sm:items-center justify-between gap-3;
+}
+
+@utility page-title {
+  @apply text-xl sm:text-2xl font-bold tracking-tight;
+}
+
+@utility page-description {
+  @apply text-sm sm:text-base text-muted-foreground;
+}
+
+@utility form-grid {
+  @apply grid gap-4;
+}
+
+@utility mobile-bottom-nav {
+  @apply fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t bg-background px-2 py-1 lg:hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

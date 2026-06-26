@@ -133,7 +133,7 @@ export default function PerformanceReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Performance Reviews</h1>
           <p className="text-muted-foreground">Review and manage employee performance evaluations</p>
@@ -174,7 +174,7 @@ export default function PerformanceReviewsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Review Period</Label>
                 <Input placeholder="e.g. Q1 2026" value={formData.review_period} onChange={(e) => setFormData((p) => ({ ...p, review_period: e.target.value }))} />
@@ -201,7 +201,7 @@ export default function PerformanceReviewsPage() {
               <Label className="text-xs">Goals (one per line)</Label>
               <Textarea placeholder="Goal 1\nGoal 2" value={formData.goals} onChange={(e) => setFormData((p) => ({ ...p, goals: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Achievements (one per line)</Label>
                 <Textarea placeholder="Achievement 1" value={formData.achievements} onChange={(e) => setFormData((p) => ({ ...p, achievements: e.target.value }))} />
@@ -223,7 +223,7 @@ export default function PerformanceReviewsPage() {
           <DialogHeader><DialogTitle>Performance Review</DialogTitle></DialogHeader>
           {selectedReview && (
             <div className="grid gap-4">
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div>
                   <span className="text-muted-foreground">Employee: </span>
                   <span className="font-medium">{employeeMap.get(selectedReview.employee_id) ?? selectedReview.employee_id}</span>

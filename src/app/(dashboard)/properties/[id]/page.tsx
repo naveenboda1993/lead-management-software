@@ -217,7 +217,7 @@ export default function PropertyDetailPage() {
                 value={formData.property_name}
                 onChange={(e) => setFormData((p) => ({ ...p, property_name: e.target.value }))}
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   placeholder="Price"
@@ -232,7 +232,7 @@ export default function PropertyDetailPage() {
                   onChange={(e) => setFormData((p) => ({ ...p, location: e.target.value }))}
                 />
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   placeholder="City"
@@ -269,28 +269,30 @@ export default function PropertyDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/properties")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold">{property.property_name}</h1>
-              <Badge className={PROPERTY_STATUS_COLORS[property.status]} variant="outline">
-                {PROPERTY_STATUS_LABELS[property.status]}
-              </Badge>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Button variant="ghost" size="icon" onClick={() => router.push("/properties")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold truncate">{property.property_name}</h1>
+                <Badge className={PROPERTY_STATUS_COLORS[property.status]} variant="outline">
+                  {PROPERTY_STATUS_LABELS[property.status]}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">{property.city}, {property.state}</p>
             </div>
-            <p className="text-sm text-muted-foreground">{property.city}, {property.state}</p>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleEdit}>
-            <Edit3 className="mr-2 h-4 w-4" /> Edit
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" size="sm" onClick={handleEdit}>
+              <Edit3 className="mr-2 h-4 w-4" /> Edit
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
-            <Trash2 className="mr-2 h-4 w-4" /> Delete
-          </Button>
         </div>
+      </div>
       </div>
 
       <Tabs defaultValue="details" className="space-y-4">
@@ -384,7 +386,7 @@ export default function PropertyDetailPage() {
               {property.images.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No images uploaded</p>
               ) : (
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {property.images.map((img, i) => (
                     <div key={i} className="aspect-video rounded-lg border bg-muted flex items-center justify-center">
                       <span className="text-xs text-muted-foreground">Image {i + 1}</span>

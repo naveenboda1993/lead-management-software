@@ -52,7 +52,7 @@ export default function EmployeeDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold">{employee.name}</h1>
             <Badge variant="outline">{ROLES[employee.role]}</Badge>
           </div>

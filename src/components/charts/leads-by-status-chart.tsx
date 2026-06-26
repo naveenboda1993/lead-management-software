@@ -24,9 +24,9 @@ export function LeadsByStatusChart({ data, loading }: LeadsByStatusChartProps) {
     name: LEAD_STATUS_LABELS[d.status] ?? d.status,
     count: d.count,
     fill:
-      d.status === "WON"
+      d.status === "won"
         ? "#10b981"
-        : d.status === "LOST"
+        : d.status === "lost"
           ? "#ef4444"
           : "#3b82f6",
   }));

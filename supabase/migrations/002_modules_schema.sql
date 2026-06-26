@@ -103,7 +103,7 @@ CREATE TABLE tickets (
   description TEXT,
   status ticket_status NOT NULL DEFAULT 'OPEN',
   channel ticket_channel NOT NULL DEFAULT 'WEB_PORTAL',
-  priority lead_priority NOT NULL DEFAULT 'MEDIUM',
+  priority lead_priority NOT NULL DEFAULT 'medium',
   customer_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   lead_id UUID REFERENCES leads(id) ON DELETE SET NULL,
   assigned_to UUID REFERENCES profiles(id) ON DELETE SET NULL,

@@ -17,51 +17,51 @@ export enum Role {
 }
 
 export enum LeadStatus {
-  NEW = "NEW",
-  CONTACTED = "CONTACTED",
-  QUALIFIED = "QUALIFIED",
-  PROPOSAL_SENT = "PROPOSAL_SENT",
-  NEGOTIATION = "NEGOTIATION",
-  WON = "WON",
-  LOST = "LOST",
+  NEW = "new",
+  CONTACTED = "contacted",
+  QUALIFIED = "qualified",
+  PROPOSAL_SENT = "proposal_sent",
+  NEGOTIATION = "negotiation",
+  WON = "won",
+  LOST = "lost",
 }
 
 export enum LeadSource {
-  MANUAL_ENTRY = "MANUAL_ENTRY",
-  WEBSITE_FORM = "WEBSITE_FORM",
-  FACEBOOK = "FACEBOOK",
-  INSTAGRAM = "INSTAGRAM",
-  GOOGLE_ADS = "GOOGLE_ADS",
-  LINKEDIN = "LINKEDIN",
-  LINKEDIN_ADS = "LINKEDIN_ADS",
-  WALK_IN = "WALK_IN",
-  REFERRAL = "REFERRAL",
-  CSV_UPLOAD = "CSV_UPLOAD",
-  API_INTEGRATION = "API_INTEGRATION",
-  IVR_CALLS = "IVR_CALLS",
-  WHATSAPP = "WHATSAPP",
-  EMAIL_CAMPAIGN = "EMAIL_CAMPAIGN",
+  MANUAL_ENTRY = "manual_entry",
+  WEBSITE_FORM = "website_form",
+  FACEBOOK = "facebook",
+  INSTAGRAM = "instagram",
+  GOOGLE_ADS = "google_ads",
+  LINKEDIN = "linkedin",
+  LINKEDIN_ADS = "linkedin_ads",
+  WALK_IN = "walk_in",
+  REFERRAL = "referral",
+  CSV_UPLOAD = "csv_upload",
+  API_INTEGRATION = "api_integration",
+  IVR_CALLS = "ivr_calls",
+  WHATSAPP = "whatsapp",
+  EMAIL_CAMPAIGN = "email_campaign",
 }
 
 export enum LeadPriority {
-  LOW = "LOW",
-  MEDIUM = "MEDIUM",
-  HIGH = "HIGH",
-  CRITICAL = "CRITICAL",
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  CRITICAL = "critical",
 }
 
 export enum TaskStatus {
-  PENDING = "PENDING",
-  COMPLETED = "COMPLETED",
-  CANCELLED = "CANCELLED",
+  PENDING = "pending",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
 }
 
 export enum TaskType {
-  FOLLOW_UP = "FOLLOW_UP",
-  CALL = "CALL",
-  MEETING = "MEETING",
-  REMINDER = "REMINDER",
-  NOTE = "NOTE",
+  FOLLOW_UP = "follow_up",
+  CALL = "call",
+  MEETING = "meeting",
+  REMINDER = "reminder",
+  NOTE = "note",
 }
 
 export const PipelineStage = LeadStatus;

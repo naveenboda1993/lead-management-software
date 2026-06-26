@@ -110,7 +110,7 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Products</h1>
           <p className="text-muted-foreground">Manage your product catalog</p>
@@ -179,7 +179,7 @@ export default function ProductsPage() {
           <div className="grid gap-4">
             <Input placeholder="Name" value={formData.name} onChange={(e) => setFormData((p: any) => ({ ...p, name: e.target.value }))} />
             <Input placeholder="SKU" value={formData.sku} onChange={(e) => setFormData((p: any) => ({ ...p, sku: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Select value={formData.category} onValueChange={(v) => setFormData((p: any) => ({ ...p, category: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -189,11 +189,11 @@ export default function ProductsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input type="number" placeholder="Price" value={formData.price || ""} onChange={(e) => setFormData((p: any) => ({ ...p, price: Number(e.target.value) }))} />
               <Input type="number" placeholder="Cost Price" value={formData.cost_price || ""} onChange={(e) => setFormData((p: any) => ({ ...p, cost_price: Number(e.target.value) }))} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input placeholder="Size" value={formData.size ?? ""} onChange={(e) => setFormData((p: any) => ({ ...p, size: e.target.value }))} />
               <Input placeholder="Color" value={formData.color ?? ""} onChange={(e) => setFormData((p: any) => ({ ...p, color: e.target.value }))} />
               <Input placeholder="Material" value={formData.material ?? ""} onChange={(e) => setFormData((p: any) => ({ ...p, material: e.target.value }))} />

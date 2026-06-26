@@ -82,8 +82,8 @@ export default function AttendancePage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="rounded-md border">
-          <table className="w-full">
+        <div className="rounded-md border overflow-x-auto">
+          <table className="w-full min-w-[640px]">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left p-3 text-sm font-medium">Employee</th>
