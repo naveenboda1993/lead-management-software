@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
-import { useAuth } from "@/providers/auth-provider";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,12 +23,11 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/toast";
 
 export default function LoginPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
-  const { signIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const supabase = createClient();
 
   const {
     register,
@@ -42,18 +41,18 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error: signInError } = await signIn(data.email, data.password);
-    setLoading(false);
+    const { error: signInError } = await supabase.auth.signInWithPassword(data);
 
     if (signInError) {
-      setError(signInError);
-      toast.error(signInError);
+      setLoading(false);
+      setError(signInError.message);
+      toast.error(signInError.message);
       return;
     }
 
+    setLoading(false);
     toast.success("Welcome back!");
-    router.push(redirect);
-    router.refresh();
+    window.location.href = redirect;
   };
 
   const handleGoogleLogin = () => {
@@ -131,7 +130,7 @@ export default function LoginPage() {
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               <Link
-                href="/auth/forgot-password"
+                href="/forgot-password"
                 className="text-xs text-muted-foreground hover:text-primary"
               >
                 Forgot password?
@@ -160,7 +159,7 @@ export default function LoginPage() {
         <p className="text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link
-            href="/auth/register"
+            href="/register"
             className="font-medium text-primary hover:underline"
           >
             Create one

@@ -72,7 +72,7 @@ function ResetPasswordForm() {
     }
 
     toast.success("Password reset successfully!");
-    router.push("/auth/login");
+    router.push("/login");
   };
 
   return (
@@ -132,7 +132,7 @@ function ResetPasswordForm() {
       </CardContent>
       <CardFooter className="justify-center">
         <Link
-          href="/auth/login"
+          href="/login"
           className="text-sm text-muted-foreground hover:text-primary"
         >
           Back to sign in

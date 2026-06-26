@@ -50,15 +50,8 @@ export default function RegisterPage() {
       return;
     }
 
-    const supabase = createClient();
-    await supabase.from("users").insert({
-      email: data.email,
-      name: data.name,
-      role: "SALES_EXECUTIVE",
-    });
-
     toast.success("Account created! Please check your email to confirm.");
-    router.push("/auth/login");
+    router.push("/login");
   };
 
   const handleGoogleRegister = () => {
@@ -180,7 +173,7 @@ export default function RegisterPage() {
         <p className="text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
-            href="/auth/login"
+            href="/login"
             className="font-medium text-primary hover:underline"
           >
             Sign in

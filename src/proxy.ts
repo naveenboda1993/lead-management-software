@@ -9,7 +9,7 @@ const roleRouteMap: Record<string, string[]> = {
   "/reports": ["SUPER_ADMIN", "ADMIN", "SALES_MANAGER"],
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
