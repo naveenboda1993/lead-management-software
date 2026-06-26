@@ -13,15 +13,12 @@ export interface EmployeeFilters {
 }
 
 async function fetchEmployees(filters?: EmployeeFilters): Promise<User[]> {
-  let query = supabase.from("profiles").select("*").order("name", { ascending: true });
+  let query = supabase.from("profiles").select("*").order("full_name", { ascending: true });
 
   if (filters?.search) {
     query = query.or(
-      `name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,employee_id.ilike.%${filters.search}%`
+      `full_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`
     );
-  }
-  if (filters?.department) {
-    query = query.eq("department", filters.department);
   }
   if (filters?.role) {
     query = query.eq("role", filters.role);

@@ -73,8 +73,8 @@ export default function DashboardPage() {
   const { data: profiles } = useQuery({
     queryKey: ["profiles"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("id,name");
-      return (data ?? []) as Pick<User, "id" | "name">[];
+      const { data } = await supabase.from("profiles").select("id,full_name");
+      return ((data ?? []) as { id: string; full_name: string }[]).map((p) => ({ id: p.id, name: p.full_name })) as Pick<User, "id" | "name">[];
     },
   });
 

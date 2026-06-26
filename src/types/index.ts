@@ -410,6 +410,17 @@ export interface CallLog {
   created_at: string;
 }
 
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  read: boolean;
+  link?: string | null;
+  organization_id: string;
+  created_at: string;
+}
+
 export interface VirtualNumber {
   id: string;
   number: string;

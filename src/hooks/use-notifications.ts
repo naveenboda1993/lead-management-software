@@ -3,18 +3,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useCallback, useMemo } from "react";
+import type { Notification } from "@/types";
 
 const supabase = createClient();
-
-interface Notification {
-  id: string;
-  user_id: string;
-  title: string;
-  message: string;
-  read: boolean;
-  link?: string | null;
-  created_at: string;
-}
 
 async function fetchNotifications(): Promise<Notification[]> {
   const { data } = await supabase
@@ -26,9 +17,7 @@ async function fetchNotifications(): Promise<Notification[]> {
   return (data ?? []) as Notification[];
 }
 
-async function markNotificationRead(
-  id: string
-): Promise<void> {
+async function markNotificationRead(id: string): Promise<void> {
   const { error } = await supabase
     .from("notifications")
     .update({ read: true })
