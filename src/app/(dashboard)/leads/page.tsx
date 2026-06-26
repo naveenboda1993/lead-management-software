@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Loader2, Upload } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import Link from "next/link";
+import { Plus, Loader2, Upload, Pencil, Trash2, UserRoundCog } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useLeads, useCreateLead, useUpdateLead, useDeleteLead } from "@/hooks/use-leads";
+import { createClient } from "@/lib/supabase/client";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,7 +17,22 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
 import { LeadForm } from "@/components/leads/lead-form";
 import { LeadFilters } from "@/components/leads/lead-filters";
@@ -30,7 +46,6 @@ import { z } from "zod";
 type CreateLeadInput = z.infer<typeof createLeadSchema>;
 
 export default function LeadsPage() {
-  const router = useRouter();
   const [filters, setFilters] = useState<LeadFiltersType>({});
   const { data: leads, isLoading, error } = useLeads(filters);
   const createLead = useCreateLead();
@@ -39,6 +54,22 @@ export default function LeadsPage() {
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLead, setEditLead] = useState<Lead | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Lead | null>(null);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<Lead | null>(null);
+  const [assignUserId, setAssignUserId] = useState("");
+  const [profiles, setProfiles] = useState<{ id: string; full_name: string; role: string }[]>([]);
+
+  useEffect(() => {
+    if (assignOpen) {
+      createClient().from("profiles").select("id, full_name, role").then(({ data }) => {
+        if (data) setProfiles(data);
+      });
+    }
+  }, [assignOpen]);
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
@@ -58,6 +89,43 @@ export default function LeadsPage() {
       setCreateOpen(false);
     } catch {
       toast.error("Failed to create lead");
+    }
+  };
+
+  const handleEditLead = async (data: CreateLeadInput) => {
+    if (!editLead) return;
+    try {
+      await updateLead.mutateAsync({ id: editLead.id, ...data });
+      toast.success("Lead updated successfully");
+      setEditOpen(false);
+      setEditLead(null);
+    } catch {
+      toast.error("Failed to update lead");
+    }
+  };
+
+  const handleDeleteLead = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteLead.mutateAsync(deleteTarget.id);
+      toast.success("Lead deleted");
+      setDeleteOpen(false);
+      setDeleteTarget(null);
+    } catch {
+      toast.error("Failed to delete lead");
+    }
+  };
+
+  const handleAssignLead = async () => {
+    if (!assignTarget || !assignUserId) return;
+    try {
+      await updateLead.mutateAsync({ id: assignTarget.id, assigned_to: assignUserId });
+      toast.success("Lead assigned");
+      setAssignOpen(false);
+      setAssignTarget(null);
+      setAssignUserId("");
+    } catch {
+      toast.error("Failed to assign lead");
     }
   };
 
@@ -82,13 +150,6 @@ export default function LeadsPage() {
       setImporting(false);
     }
   };
-
-  const handleRowClick = useCallback(
-    (lead: Lead) => {
-      router.push(`/leads/${lead.id}`);
-    },
-    [router]
-  );
 
   const handleBulkAssign = async (_userId: string) => {
     setBulkLoading(true);
@@ -186,9 +247,9 @@ export default function LeadsPage() {
         id: "name",
         header: "Name",
         cell: ({ row }) => (
-          <span className="font-medium">
+          <Link href={`/leads/${row.original.id}`} className="font-medium hover:underline">
             {row.original.first_name} {row.original.last_name}
-          </span>
+          </Link>
         ),
       },
       {
@@ -241,6 +302,40 @@ export default function LeadsPage() {
         accessorKey: "created_at",
         header: "Created",
         cell: ({ row }) => formatDate(row.original.created_at),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-more-horizontal"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => window.location.href = `/leads/${row.original.id}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { setEditLead(row.original); setEditOpen(true); }}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { setAssignTarget(row.original); setAssignUserId(row.original.assigned_to ?? ""); setAssignOpen(true); }}>
+                <UserRoundCog className="mr-2 h-4 w-4" />
+                Assign
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => { setDeleteTarget(row.original); setDeleteOpen(true); }}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
       },
     ],
     [selectedIds]
@@ -297,7 +392,6 @@ export default function LeadsPage() {
           columns={columns}
           data={leads ?? []}
           searchKey="email"
-          onRowClick={handleRowClick}
         />
       )}
 
@@ -370,6 +464,77 @@ export default function LeadsPage() {
             onCancel={() => setCreateOpen(false)}
             loading={createLead.isPending}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editOpen} onOpenChange={(o) => { if (!o) { setEditOpen(false); setEditLead(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Lead</DialogTitle>
+          </DialogHeader>
+          {editLead && (
+            <LeadForm
+              lead={editLead}
+              onSubmit={handleEditLead}
+              onCancel={() => { setEditOpen(false); setEditLead(null); }}
+              loading={updateLead.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onOpenChange={(o) => { if (!o) { setDeleteOpen(false); setDeleteTarget(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Lead</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {deleteTarget?.first_name} {deleteTarget?.last_name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeleteOpen(false); setDeleteTarget(null); }}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteLead}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={assignOpen} onOpenChange={(o) => { if (!o) { setAssignOpen(false); setAssignTarget(null); setAssignUserId(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Lead</DialogTitle>
+            <DialogDescription>
+              Assign {assignTarget?.first_name} {assignTarget?.last_name} to a user.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Assign to</Label>
+              <Select value={assignUserId} onValueChange={setAssignUserId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.full_name} ({p.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAssignOpen(false); setAssignTarget(null); setAssignUserId(""); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleAssignLead} disabled={!assignUserId}>
+              Assign
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

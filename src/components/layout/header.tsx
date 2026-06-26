@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useUser } from "@/hooks/use-user";
 import { useAuth } from "@/providers/auth-provider";
+import { useNotifications } from "@/hooks/use-notifications";
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -43,6 +44,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const router = useRouter();
   const { user } = useUser();
   const { signOut } = useAuth();
+  const { unreadCount } = useNotifications();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -127,14 +129,16 @@ export function Header({ onMenuToggle }: HeaderProps) {
         <Search className="h-5 w-5" />
       </Button>
 
-      <Button variant="ghost" size="icon" className="relative">
+      <Button variant="ghost" size="icon" className="relative" onClick={() => router.push("/notifications")}>
         <Bell className="h-5 w-5" />
-        <Badge
-          variant="destructive"
-          className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px]"
-        >
-          3
-        </Badge>
+        {unreadCount > 0 && (
+          <Badge
+            variant="destructive"
+            className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px]"
+          >
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </Badge>
+        )}
       </Button>
 
       <DropdownMenu>

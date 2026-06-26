@@ -32,7 +32,6 @@ interface DataTableProps<TData, TValue> {
   searchKey?: string
   pageSize?: number
   onRowClick?: (row: TData) => void
-  selectOnRowClick?: boolean
 }
 
 function DataTable<TData, TValue>({
@@ -41,7 +40,6 @@ function DataTable<TData, TValue>({
   searchKey,
   pageSize = 10,
   onRowClick,
-  selectOnRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -117,25 +115,11 @@ function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  onClick={() => {
-                    if (selectOnRowClick) {
-                      row.toggleSelected()
-                    }
-                    onRowClick?.(row.original)
-                  }}
-                  className={cn(
-                    (onRowClick || selectOnRowClick) && "cursor-pointer"
-                  )}
+                  onClick={() => onRowClick?.(row.original)}
+                  className={cn(onRowClick && "cursor-pointer")}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      onClick={
-                        cell.column.id === "select" && selectOnRowClick
-                          ? (e) => e.stopPropagation()
-                          : undefined
-                      }
-                    >
+                    <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

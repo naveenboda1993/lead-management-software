@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bell,
   CheckCheck,
@@ -28,6 +29,7 @@ import { toast } from "@/components/ui/toast";
 type FilterValue = "ALL" | "READ" | "UNREAD";
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const {
     notifications,
     unreadCount,
@@ -144,10 +146,17 @@ export default function NotificationsPage() {
             <Card
               key={notification.id}
               className={
-                !notification.read
-                  ? "border-primary/20 bg-primary/5"
-                  : undefined
+                (notification.link ? "cursor-pointer" : "") +
+                (!notification.read
+                  ? " border-primary/20 bg-primary/5"
+                  : "")
               }
+              onClick={() => {
+                if (notification.link) {
+                  if (!notification.read) handleMarkAsRead(notification.id);
+                  router.push(notification.link);
+                }
+              }}
             >
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                 <div className="flex items-start gap-3">
@@ -186,14 +195,16 @@ export default function NotificationsPage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => handleMarkAsRead(notification.id)}
+                      onClick={(e) => { e.stopPropagation(); handleMarkAsRead(notification.id); }}
                       title="Mark as read"
                     >
                       <Check className="h-4 w-4" />
                     </Button>
                   )}
                   {notification.link && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" asChild
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Link href={notification.link} title="View details">
                         <ExternalLink className="h-4 w-4" />
                       </Link>
@@ -203,7 +214,7 @@ export default function NotificationsPage() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(notification.id)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(notification.id); }}
                     title="Delete"
                   >
                     <Trash2 className="h-4 w-4" />

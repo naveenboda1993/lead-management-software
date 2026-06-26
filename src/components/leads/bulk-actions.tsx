@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import {
   CheckSquare,
   Square,
@@ -49,6 +50,15 @@ export function BulkActions({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [assigneeId, setAssigneeId] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [profiles, setProfiles] = useState<{ id: string; full_name: string; role: string }[]>([]);
+
+  useEffect(() => {
+    if (assignOpen) {
+      createClient().from("profiles").select("id, full_name, role").then(({ data }) => {
+        if (data) setProfiles(data);
+      });
+    }
+  }, [assignOpen]);
 
   const allSelected = selectedIds.size === leads.length && leads.length > 0;
 
@@ -176,9 +186,11 @@ export function BulkActions({
                 <SelectValue placeholder="Select assignee" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user-1">John Doe</SelectItem>
-                <SelectItem value="user-2">Jane Smith</SelectItem>
-                <SelectItem value="user-3">Bob Wilson</SelectItem>
+                {profiles.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.full_name} ({p.role})
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

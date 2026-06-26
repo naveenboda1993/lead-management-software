@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -99,6 +99,9 @@ export default function LeadDetailPage() {
   const [recommendationsOpen, setRecommendationsOpen] = useState(false);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [followUpLoading, setFollowUpLoading] = useState(false);
+  const [followUpResult, setFollowUpResult] = useState<{ channel: string; message?: string; tone?: string; timing?: string } | null>(null);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
 
   const handleUpdate = async (data: CreateLeadInput) => {
     try {
@@ -284,8 +287,26 @@ export default function LeadDetailPage() {
                 Score Lead
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => {
-                  toast.success("Follow-up generated");
+                onClick={async () => {
+                  setFollowUpLoading(true);
+                  try {
+                    const res = await fetch("/api/ai/follow-up", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ lead_id: leadId, channel: "generic" }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      setFollowUpResult(data.data);
+                      setFollowUpOpen(true);
+                    } else {
+                      toast.error(data.error || "Failed to generate follow-up");
+                    }
+                  } catch {
+                    toast.error("Failed to generate follow-up");
+                  } finally {
+                    setFollowUpLoading(false);
+                  }
                 }}
               >
                 Generate Follow-up
@@ -841,6 +862,36 @@ export default function LeadDetailPage() {
             >
               {deleteLoading ? "Deleting..." : "Delete"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={followUpOpen} onOpenChange={setFollowUpOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Generated Follow-up</DialogTitle>
+            <DialogDescription>
+              AI-generated follow-up message for {lead?.first_name} {lead?.last_name}
+            </DialogDescription>
+          </DialogHeader>
+          {followUpLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : followUpResult ? (
+            <div className="space-y-4">
+              <div className="flex gap-2 flex-wrap">
+                <Badge variant="outline">Channel: {followUpResult.channel}</Badge>
+                {followUpResult.tone && <Badge variant="outline">Tone: {followUpResult.tone}</Badge>}
+                {followUpResult.timing && <Badge variant="outline">Timing: {followUpResult.timing}</Badge>}
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4 whitespace-pre-wrap text-sm">
+                {followUpResult.message ?? followUpResult.channel}
+              </div>
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button onClick={() => setFollowUpOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
