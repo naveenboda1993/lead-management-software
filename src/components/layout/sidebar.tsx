@@ -87,9 +87,9 @@ const navSections: NavSection[] = [
     label: "HR",
     items: [
       { href: "/employees", label: "Employees", icon: UserCog },
-      { href: "/attendance", label: "Attendance", icon: CalendarCheck },
-      { href: "/leaves", label: "Leaves", icon: CalendarRange },
-      { href: "/payroll", label: "Payroll", icon: Wallet },
+      { href: "/employees/attendance", label: "Attendance", icon: CalendarCheck },
+      { href: "/employees/leaves", label: "Leaves", icon: CalendarRange },
+      { href: "/employees/payroll", label: "Payroll", icon: Wallet },
     ],
   },
   {
@@ -209,7 +209,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </div>
           ) : user ? (
             <Link
-              href="/settings/profile"
+              href="/settings"
               className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-accent"
             >
               <Avatar className="h-9 w-9">
