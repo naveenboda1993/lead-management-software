@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       id: userId,
       email,
       full_name,
-      role: "SALES_EXECUTIVE",
+      role: "sales_executive",
       organization_id: org.id,
     });
 
