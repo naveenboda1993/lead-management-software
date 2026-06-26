@@ -143,6 +143,36 @@ npx tsc --noEmit  # TypeScript check
 npm run build     # Production build
 ```
 
+## Seed Data
+
+The project includes a seed script to populate the database with realistic test data.
+
+### Prerequisites
+- Supabase project running
+- `.env.local` configured with `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+- Enum values must exist in the database (run `supabase/migrations/006_fix_all_enums.sql` in SQL Editor first)
+
+### Run Seed
+
+```bash
+npx tsx --env-file=.env.local src/lib/supabase/seed.ts
+```
+
+Re-running wipes previous seed data for each table (scoped to the organization) and inserts fresh records.
+
+### Seeds Included
+
+| Table | Records | Details |
+|-------|---------|---------|
+| Organization | 1 | Acme Corp |
+| Brokers | 8 | Mix of agencies and independent brokers |
+| Properties | 14 | Apartments, Villas, Commercial, Land across 8 Indian cities |
+| Leads | 14 | Across all pipeline stages |
+| Tasks | 16 | Follow-ups, calls, meetings linked to leads |
+| Lead Source Stats | 8 | Aggregated counts per source |
+
+> **Note:** Profiles, Leads, and Tasks will be skipped if Auth users haven't been created yet (FK constraint).
+
 ## Troubleshooting
 
 | Issue | Solution |

@@ -536,28 +536,45 @@ For each role, verify:
 
 ## 15. Test Data Quick Reference
 
-### Leads by Stage
-| Stage | Expected Count |
-|-------|---------------|
-| New | ~10 |
-| Contacted | ~8 |
-| Qualified | ~7 |
-| Proposal Sent | ~5 |
-| Negotiation | ~4 |
-| Won | ~6 |
-| Lost | ~5 |
+### Leads by Stage (14 total)
+| Stage | Count |
+|-------|-------|
+| New | 2 |
+| Contacted | 2 |
+| Qualified | 2 |
+| Proposal Sent | 2 |
+| Negotiation | 2 |
+| Won | 2 |
+| Lost | 2 |
 
-### Source Distribution
-| Source | Expected Count |
-|--------|---------------|
-| Website Form | ~10 |
-| Google Ads | ~8 |
-| Facebook | ~6 |
-| LinkedIn Ads | ~5 |
-| Manual Entry | ~5 |
-| Walk-in | ~4 |
-| CSV Upload | ~3 |
-| API Integration | ~2 |
+### Properties by Type (14 total)
+| Type | Count |
+|------|-------|
+| Apartment | 6 |
+| Villa | 3 |
+| Commercial | 3 |
+| Land | 2 |
+
+### Properties by Status
+| Status | Count |
+|--------|-------|
+| Available | 6 |
+| Under Offer | 2 |
+| Under Construction | 1 |
+| Rented | 2 |
+| Sold | 2 |
+
+### Brokers (8 total)
+| Name | Company | Rate |
+|------|---------|------|
+| Rajesh Khanna | Luxury Estates India | 2.5% |
+| Priya Sharma | Prime Properties | 2.0% |
+| Amit Verma | Realty Plus | 3.0% |
+| Sneha Patel | HomeFinch Realty | 2.5% |
+| Vikram Singh | EstateHub | 2.0% |
+| Ananya Gupta | SAK Properties | 3.5% |
+| Rohit Mehra | Urban Vista Realty | 2.0% |
+| Kavita Joshi | PentaHome Realtors | 2.5% |
 
 ### Users by Role
 | Role | Count |
@@ -577,18 +594,6 @@ For each role, verify:
 | Customer | 1 |
 | Vendor | 1 |
 | Viewer | 1 |
-
-### Additional Test Data
-
-| Entity | Expected Count | Notes |
-|--------|---------------|-------|
-| Properties | ~20 | Mix of Apartments, Villas, Commercial, Land |
-| Products | ~15 | Across all categories (Men's, Women's, Kids) |
-| Orders | ~10 | Various statuses |
-| Tickets | ~8 | Mix of Open/In Progress/Resolved |
-| Campaigns | ~5 | At least 1 Running, 1 Completed |
-| Call Logs | ~20 | Mix of inbound/outbound |
-| Attendance Records | ~60 | ~20 per employee for last month |
 
 ---
 
@@ -632,9 +637,12 @@ For each role, verify:
 ### 16.5 Broker Management
 | Step | Action | Expected Result |
 |------|--------|-----------------|
-| 1 | Navigate to brokers section | List of brokers with name, company, commission rate |
-| 2 | Create broker | Add name, email, phone, company, commission rate |
-| 3 | Assign broker to property | Broker appears in property detail |
+| 1 | Navigate to `/brokers` | DataTable with columns: Name, Email, Phone, Company, Commission Rate, Total Earned, Properties Sold |
+| 2 | Create broker | Form with name, email, phone, company, commission rate — broker appears in table |
+| 3 | Click broker row | Row checkbox toggles (for bulk actions) |
+| 4 | Edit broker | Click edit action — form pre-filled, updates applied |
+| 5 | Delete broker | Confirmation dialog, broker removed |
+| 6 | Assign broker to property | In property detail, broker dropdown lists available brokers |
 
 ### 16.6 Commission Tracking
 | Step | Action | Expected Result |
