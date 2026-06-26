@@ -12,6 +12,20 @@ import {
   Settings,
   ChevronLeft,
   X,
+  Building2,
+  Package,
+  ShoppingCart,
+  Truck,
+  Megaphone,
+  BarChart3,
+  DollarSign,
+  UserCog,
+  CalendarCheck,
+  CalendarRange,
+  Wallet,
+  Ticket,
+  Globe,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -28,14 +42,76 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/leads", label: "Leads", icon: Users },
-  { href: "/pipeline", label: "Pipeline", icon: GitBranch },
-  { href: "/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/documents", label: "Documents", icon: FileText },
-  { href: "/audit-logs", label: "Audit Logs", icon: ScrollText },
-  { href: "/settings", label: "Settings", icon: Settings },
+interface NavSection {
+  label: string;
+  items: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
+}
+
+const navSections: NavSection[] = [
+  {
+    label: "CRM",
+    items: [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard/employer", label: "Employer Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard/employee", label: "Employee Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard/marketing", label: "Marketing Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard/sales", label: "Sales Dashboard", icon: LayoutDashboard },
+      { href: "/leads", label: "Leads", icon: Users },
+      { href: "/pipeline", label: "Pipeline", icon: GitBranch },
+      { href: "/tasks", label: "Tasks", icon: CheckSquare },
+    ],
+  },
+  {
+    label: "Real Estate",
+    items: [
+      { href: "/properties", label: "Properties", icon: Building2 },
+    ],
+  },
+  {
+    label: "Ecommerce",
+    items: [
+      { href: "/products", label: "Products", icon: Package },
+      { href: "/orders", label: "Orders", icon: ShoppingCart },
+      { href: "/suppliers", label: "Suppliers", icon: Truck },
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [
+      { href: "/campaigns", label: "Campaigns", icon: Megaphone },
+      { href: "/google-ads", label: "Google Ads", icon: BarChart3 },
+      { href: "/adsense", label: "AdSense", icon: DollarSign },
+    ],
+  },
+  {
+    label: "HR",
+    items: [
+      { href: "/employees", label: "Employees", icon: UserCog },
+      { href: "/attendance", label: "Attendance", icon: CalendarCheck },
+      { href: "/leaves", label: "Leaves", icon: CalendarRange },
+      { href: "/payroll", label: "Payroll", icon: Wallet },
+    ],
+  },
+  {
+    label: "Support",
+    items: [
+      { href: "/tickets", label: "Tickets", icon: Ticket },
+    ],
+  },
+  {
+    label: "Customer Portal",
+    items: [
+      { href: "/portal", label: "Portal", icon: Globe },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { href: "/documents", label: "Documents", icon: FileText },
+      { href: "/audit-logs", label: "Audit Logs", icon: ScrollText },
+      { href: "/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
 
 export function Sidebar({ open, onClose }: SidebarProps) {
@@ -84,29 +160,39 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </div>
 
         <ScrollArea className="flex-1 px-3 py-2">
-          <nav className="flex flex-col gap-1">
-            {navItems.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                pathname.startsWith(item.href + "/");
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                    isActive
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
+          <nav className="flex flex-col gap-4">
+            {navSections.map((section) => (
+              <div key={section.label}>
+                <span className="flex items-center gap-2 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Layers className="h-3 w-3" />
+                  {section.label}
+                </span>
+                <div className="mt-1 flex flex-col gap-0.5">
+                  {section.items.map((item) => {
+                    const isActive =
+                      pathname === item.href ||
+                      pathname.startsWith(item.href + "/");
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                          isActive
+                            ? "bg-accent text-accent-foreground"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </ScrollArea>
 

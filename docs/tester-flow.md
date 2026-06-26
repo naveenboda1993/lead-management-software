@@ -43,43 +43,98 @@ This guide covers all user-facing features, organized by role. Test each flow en
 
 ## 2. Role-Based Access Control
 
-### 2.1 Permissions Matrix
+### 2.1 Roles Overview
 
-| Feature | Super Admin | Admin | Sales Manager | Sales Executive | Viewer |
-|---------|:-----------:|:-----:|:-------------:|:---------------:|:------:|
-| View Dashboard | Y | Y | Y | Y | Y |
-| Create Lead | Y | Y | Y | Y | N |
-| Edit Lead | Y | Y | Y | Y | N |
-| Delete Lead | Y | Y | Y | N | N |
-| Import CSV | Y | Y | Y | N | N |
-| Export Leads | Y | Y | Y | N | N |
-| Assign Leads | Y | Y | Y | N | N |
-| View Tasks | Y | Y | Y | Y | Y |
-| Create/Edit Task | Y | Y | Y | Y | N |
-| Delete Task | Y | Y | Y | N | N |
-| Upload Doc | Y | Y | Y | Y | N |
-| Delete Doc | Y | Y | Y | N | N |
-| View Audit Logs | Y | Y | Y | Y | N |
-| Settings Access | Y | Y | N | N | N |
-| Manage Users | Y | Y | N | N | N |
+The system has **15 roles** with hierarchical permissions:
 
-### 2.2 Test by Role
+| Role | Level | Description |
+|------|-------|-------------|
+| SUPER_ADMIN | 1 | Full system access |
+| ADMIN | 2 | Administrative access |
+| EMPLOYER | 3 | Business owner access |
+| MANAGER | 4 | Department management |
+| SALES_MANAGER | 5 | Sales team oversight |
+| MARKETING_EXECUTIVE | 6 | Marketing operations |
+| TEAM_LEADER | 7 | Team supervision |
+| HR | 8 | Human resources |
+| RECRUITER | 9 | Recruitment |
+| FINANCE | 10 | Financial operations |
+| SALES_EXECUTIVE | 11 | Sales operations |
+| EMPLOYEE | 12 | General employee |
+| CUSTOMER | 13 | Portal access |
+| VENDOR | 14 | Supplier access |
+| VIEWER | 15 | Read-only access |
 
-Test each of the 5 accounts:
+### 2.2 Permissions Matrix
 
-| Role | Test Credentials |
-|------|-----------------|
-| **Super Admin** | `superadmin@leadcrm.com` / `Test@123456` |
-| **Admin** | `admin@leadcrm.com` / `Test@123456` |
-| **Sales Manager** | `manager@leadcrm.com` / `Test@123456` |
-| **Sales Executive** | `executive@leadcrm.com` / `Test@123456` |
-| **Viewer** | `viewer@leadcrm.com` / `Test@123456` |
+| Feature | Super Admin | Admin | Employer | Manager | Sales Mgr | Mktg Exec | Team Lead | HR | Recruit | Finance | Sales Exec | Employee | Customer | Vendor | Viewer |
+|---------|:-----------:|:-----:|:--------:|:-------:|:---------:|:---------:|:---------:|:--:|:-------:|:-------:|:----------:|:--------:|:--------:|:------:|:------:|
+| **CRM** | | | | | | | | | | | | | | | |
+| Create Lead | Y | Y | Y | Y | Y | Y | Y | - | - | - | Y | - | - | - | - |
+| Read Lead | Y | Y | Y | Y | Y | Y | Y | - | - | - | Y | - | - | - | Y |
+| Update Lead | Y | Y | Y | Y | Y | - | Y | - | - | - | Y | - | - | - | - |
+| Delete Lead | Y | Y | Y | Y | Y | - | - | - | - | - | - | - | - | - | - |
+| Assign Lead | Y | Y | Y | Y | Y | - | - | - | - | - | - | - | - | - | - |
+| **Tasks** | | | | | | | | | | | | | | | |
+| Create Task | Y | Y | Y | Y | Y | - | Y | Y | - | - | Y | - | - | - | - |
+| Read Task | Y | Y | Y | Y | Y | - | Y | - | - | - | Y | Y | - | - | Y |
+| Update Task | Y | Y | Y | Y | Y | - | Y | - | - | - | Y | Y | - | - | - |
+| Delete Task | Y | Y | Y | Y | Y | - | - | - | - | - | - | - | - | - | - |
+| **Documents** | | | | | | | | | | | | | | | |
+| Upload Doc | Y | Y | Y | Y | Y | Y | Y | Y | Y | - | Y | - | Y | Y | - |
+| Read Doc | Y | Y | Y | Y | Y | Y | Y | Y | Y | - | Y | Y | Y | Y | Y |
+| Delete Doc | Y | Y | Y | Y | Y | - | - | - | - | - | - | - | - | - | - |
+| **Properties** | | | | | | | | | | | | | | | |
+| Create Property | Y | Y | Y | Y | - | - | - | - | - | - | - | - | - | - | - |
+| Read Property | Y | Y | Y | Y | Y | - | Y | - | - | - | Y | - | Y | - | Y |
+| **Tickets** | | | | | | | | | | | | | | | |
+| Create Ticket | Y | Y | Y | Y | - | - | - | - | - | - | Y | - | Y | - | - |
+| Read Ticket | Y | Y | Y | Y | Y | - | Y | - | - | - | Y | - | Y | - | - |
+| **Campaigns** | | | | | | | | | | | | | | | |
+| Create Campaign | Y | Y | Y | Y | - | Y | - | - | - | - | - | - | - | - | - |
+| Read Campaign | Y | Y | Y | Y | Y | Y | - | - | - | - | - | - | - | - | - |
+| **Products** | | | | | | | | | | | | | | | |
+| CRUD Products | Y | Y | Y | - | - | - | - | - | - | - | - | - | - | Y | - |
+| **Orders** | | | | | | | | | | | | | | | |
+| Read Orders | Y | Y | Y | - | - | - | - | - | - | Y | - | - | Y | Y | - |
+| **Employees** | | | | | | | | | | | | | | | |
+| Manage Users | Y | Y | Y | - | - | - | - | Y | Y | - | - | - | - | - | - |
+| Attendance | Y | Y | Y | Y | - | - | - | Y | - | - | - | Y | - | - | - |
+| Leaves | Y | Y | Y | Y | - | - | - | Y | - | - | - | Y | - | - | - |
+| Payroll | Y | Y | Y | - | - | - | - | Y | - | Y | - | Y | - | - | - |
+| **Reports** | | | | | | | | | | | | | | | |
+| Read Reports | Y | Y | Y | Y | Y | Y | Y | - | - | Y | - | - | - | - | Y |
+| Export Reports | Y | Y | Y | Y | Y | - | - | - | - | Y | - | - | - | - | - |
+| **Settings** | | | | | | | | | | | | | | | |
+| Settings Access | Y | Y | Y | - | - | - | - | - | - | - | - | - | - | - | - |
+
+### 2.3 Test by Role
+
+Test each of the 15 accounts:
+
+| Role | Email | Password |
+|------|-------|----------|
+| **Super Admin** | superadmin@leadcrm.com | Test@123456 |
+| **Admin** | admin@leadcrm.com | Test@123456 |
+| **Employer** | employer@leadcrm.com | Test@123456 |
+| **Manager** | manager@leadcrm.com | Test@123456 |
+| **Team Leader** | teamleader@leadcrm.com | Test@123456 |
+| **Employee** | employee@leadcrm.com | Test@123456 |
+| **Sales Executive** | executive@leadcrm.com | Test@123456 |
+| **Sales Manager** | salesmanager@leadcrm.com | Test@123456 |
+| **Marketing Executive** | marketing@leadcrm.com | Test@123456 |
+| **HR** | hr@leadcrm.com | Test@123456 |
+| **Recruiter** | recruiter@leadcrm.com | Test@123456 |
+| **Finance** | finance@leadcrm.com | Test@123456 |
+| **Customer** | customer@leadcrm.com | Test@123456 |
+| **Vendor** | vendor@leadcrm.com | Test@123456 |
+| **Viewer** | viewer@leadcrm.com | Test@123456 |
 
 For each role, verify:
 - Visible navigation items match permissions
 - Create/Edit/Delete buttons appear/disappear accordingly
 - API calls return appropriate 403 for unauthorized actions
-- Settings page is accessible only for Admin/Super Admin
+- Settings page is accessible only for Admin/Super Admin/Employer
 
 ---
 
@@ -357,7 +412,42 @@ For each role, verify:
 | 1 | Lead detail → AI Actions → conversion option | Win probability, expected revenue, suggested actions |
 | 2 | Verify | Prediction based on lead history and engagement |
 
-### 10.6 AI Notes
+### 10.6 Property Recommendation
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | POST to `/api/ai/property-recommendation` with buyer preferences | Property recommendations with match scores |
+| 2 | Provide budget, location, bedrooms | Filtered listings ranked by relevance |
+| 3 | Review recommendations | Properties with match reasons and scores |
+
+### 10.7 Marketing Campaign Generation
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | POST to `/api/ai/marketing-campaign` with goal + audience | Campaign strategy with content and KPIs |
+| 2 | Provide campaign goal, target audience, budget | Generated campaign name, channels, schedule |
+| 3 | Review output | Content suggestions, CTAs, success metrics |
+
+### 10.8 Ads Optimization
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | POST to `/api/ai/ads-optimization` with campaign data | Performance analysis and recommendations |
+| 2 | Provide ad groups and keywords | Budget allocation suggestions |
+| 3 | Review recommendations | Keyword suggestions, bid optimization |
+
+### 10.9 Customer Support
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | POST to `/api/ai/customer-support` with ticket details | Issue categorization and suggested resolution |
+| 2 | Provide customer history and previous messages | Sentiment analysis and priority assessment |
+| 3 | Review response | Suggested response, resolution steps, escalate flag |
+
+### 10.10 Sales Forecast
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | POST to `/api/ai/sales-forecast` with historical data | Monthly forecast with confidence intervals |
+| 2 | Provide pipeline deals and market trends | Predicted revenue with upper/lower bounds |
+| 3 | Review forecast | Key drivers, risks, recommended actions |
+
+### 10.11 AI Notes
 | Step | Action | Expected Result |
 |------|--------|-----------------|
 | 1 | All AI actions log an activity on the lead | Activity timeline shows AI-generated entries |
@@ -416,6 +506,9 @@ For each role, verify:
 | 4 | View DataTable on mobile | Horizontal scroll enabled |
 | 5 | View Kanban on mobile | Horizontal scroll enabled |
 | 6 | View charts on mobile | Charts resize to fit screen width |
+| 7 | Sidebar navigation groups | Group headers expand/collapse |
+| 8 | Property cards on mobile | Responsive grid (1 col on mobile, 3+ on desktop) |
+| 9 | Kanban board on mobile | Horizontal scroll + swipe |
 
 ---
 
@@ -431,6 +524,13 @@ For each role, verify:
 | CSV import of 100 records in < 5s | | |
 | AI response in < 10s | | Depends on LLM API speed |
 | Page transitions feel instant | | Next.js App Router |
+| Properties list loads in < 2s | | |
+| Kanban with 50+ leads renders in < 3s | | |
+| Campaign analytics loads in < 3s | | |
+| Attendance records filter by month | | |
+| Order list pagination | | |
+| AdSense dashboard loads in < 3s | | |
+| Google Ads campaign detail loads in < 3s | | |
 
 ---
 
@@ -464,6 +564,438 @@ For each role, verify:
 |------|-------|
 | Super Admin | 1 |
 | Admin | 1 |
-| Sales Manager | 1 |
+| Employer | 1 |
+| Manager | 1 |
+| Team Leader | 1 |
+| Employee | 1 |
 | Sales Executive | 1 |
+| Sales Manager | 1 |
+| Marketing Executive | 1 |
+| HR | 1 |
+| Recruiter | 1 |
+| Finance | 1 |
+| Customer | 1 |
+| Vendor | 1 |
 | Viewer | 1 |
+
+### Additional Test Data
+
+| Entity | Expected Count | Notes |
+|--------|---------------|-------|
+| Properties | ~20 | Mix of Apartments, Villas, Commercial, Land |
+| Products | ~15 | Across all categories (Men's, Women's, Kids) |
+| Orders | ~10 | Various statuses |
+| Tickets | ~8 | Mix of Open/In Progress/Resolved |
+| Campaigns | ~5 | At least 1 Running, 1 Completed |
+| Call Logs | ~20 | Mix of inbound/outbound |
+| Attendance Records | ~60 | ~20 per employee for last month |
+
+---
+
+## 16. Real Estate CRM — Properties Flow
+
+### 16.1 Properties List
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/properties` | DataTable with columns: Name, Type, Status, City, Price, Bedrooms |
+| 2 | Filter by Property Type | Select Apartment/Villa/Commercial/Land — table filters |
+| 3 | Filter by Status | Select Available/Sold/Rented — filters accordingly |
+| 4 | Filter by City | Enter city name — search filters |
+| 5 | Filter by Price Range | Set min/max price — table filters |
+
+### 16.2 Create Property
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click "Add Property" | Form opens with fields: Name, Type, Status, Location, City, State, Price, Area, Bedrooms, Bathrooms, Amenities |
+| 2 | Submit empty form | Validation errors on required fields |
+| 3 | Fill all required fields | Property type defaults to Apartment, status to Available |
+| 4 | Upload property images | Images appear in gallery section |
+| 5 | Submit | Property created, redirected to detail page |
+
+### 16.3 Property Detail
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click a property | Detail page with tabs |
+| 2 | **Details tab** | All property info, price, location map |
+| 3 | **Media tab** | Property images gallery |
+| 4 | **Leads tab** | Leads associated with this property |
+| 5 | **Tasks tab** | Tasks for this property |
+| 6 | **Documents tab** | Property documents (agreements, brochures) |
+
+### 16.4 Property Edit / Delete
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click Edit | Form pre-filled with property data |
+| 2 | Change status to "Sold" | Status updated, sold date logged |
+| 3 | Delete property | Confirmation, property removed (Admin/Manager only) |
+
+### 16.5 Broker Management
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to brokers section | List of brokers with name, company, commission rate |
+| 2 | Create broker | Add name, email, phone, company, commission rate |
+| 3 | Assign broker to property | Broker appears in property detail |
+
+### 16.6 Commission Tracking
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | View commissions | List of commissions with property, broker, amount, status |
+| 2 | Process commission | Mark as paid with timestamp |
+
+---
+
+## 17. IVR System — Calls Flow
+
+### 17.1 Call Logs
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/calls` | DataTable with columns: Call ID, From, To, Duration, Direction, Status, Date |
+| 2 | Filter by Direction | Select Inbound/Outbound — table filters |
+| 3 | Filter by Status | Select Completed/Missed/Busy — filters accordingly |
+| 4 | Filter by Date Range | Pick start/end dates |
+| 5 | Search by phone number | Enter number — results filter |
+
+### 17.2 Call Detail
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click a call log | Call detail with recording URL, notes, agent details |
+| 2 | Play recording | Audio player loads recording URL |
+| 3 | View associated lead | If lead linked, shows lead info |
+
+### 17.3 Virtual Numbers
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/calls/virtual-numbers` | List of virtual numbers with provider, status, assignment |
+| 2 | Add virtual number | Enter number, select provider (Exotel/Twilio/Knowlarity) |
+| 3 | Assign to agent | Number assigned to specific agent |
+| 4 | Toggle active/inactive | Number availability changes |
+
+### 17.4 Missed Call Alerts
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Simulate missed call | New lead auto-created from caller number (if configured) |
+| 2 | Check leads list | Lead appears with source "IVR Calls" |
+
+### 17.5 Click to Call
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click phone icon on lead | Outbound call initiated via connected provider |
+| 2 | Call connects | Call log created with duration tracking |
+
+---
+
+## 18. Marketing Automation — Campaigns Flow
+
+### 18.1 Campaign List
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/campaigns` | DataTable with columns: Name, Type, Status, Sent, Opened, Clicked, Converted |
+| 2 | Filter by Type | Select SMS/Email/WhatsApp — table filters |
+| 3 | Filter by Status | Select Running/Completed/Draft — filters accordingly |
+
+### 18.2 Create Campaign
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click "New Campaign" | Campaign form opens |
+| 2 | Select type | SMS, Email, or WhatsApp |
+| 3 | Enter name, subject, content | Content tailored to channel |
+| 4 | Upload recipient list | CSV with contact numbers/emails |
+| 5 | Schedule or send immediately | Campaign status becomes Scheduled or Running |
+
+### 18.3 Campaign Detail
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click a campaign | Detail page with analytics |
+| 2 | View delivery stats | Sent count, delivery rate |
+| 3 | View engagement | Opens, clicks, conversions |
+| 4 | View ROI | Cost vs conversion analysis |
+
+---
+
+## 19. Google Ads Management Flow
+
+### 19.1 Campaign List
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/google-ads` | DataTable with columns: Campaign, Status, Budget, Spend, Impressions, Clicks, Conversions, CPC, CTR |
+| 2 | Sort by spend | Sort ascending/descending |
+| 3 | View summary metrics | Total spend, total conversions, avg CPC, ROAS |
+
+### 19.2 Campaign Detail
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click a campaign | Detail page with ad groups and keywords |
+| 2 | View ad groups | List of ad groups with performance metrics |
+| 3 | View keywords | Keywords with impressions, clicks, conversions, cost |
+| 4 | Analyze performance | CPC, CPA, CTR trends |
+
+### 19.3 Dashboard Metrics
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | View main ads dashboard | KPI cards: CPC, CPA, ROAS, Conversions |
+| 2 | Lead attribution | Leads tagged with Google Ads source attributed to campaigns |
+| 3 | Track spend | Budget vs actual spend comparison |
+
+---
+
+## 20. AdSense Management Flow
+
+### 20.1 Ad Units
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/adsense` | List of ad units with type, size, status, earnings |
+| 2 | View ad unit detail | Performance metrics per unit |
+
+### 20.2 Revenue Dashboard
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | View daily stats | Impressions, clicks, earnings, RPM for today |
+| 2 | Switch to weekly | Aggregated weekly metrics |
+| 3 | Switch to monthly | Monthly trends with charts |
+| 4 | View charts | Line/bar charts showing earnings over time |
+
+---
+
+## 21. Products & Ecommerce Flow
+
+### 21.1 Product Catalog
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/products` | DataTable with columns: Name, SKU, Category, Price, Stock |
+| 2 | Filter by Category | Select Men's/Women's/Kids/Accessories — filters |
+| 3 | Filter by Size/Color | Select options — filters accordingly |
+| 4 | Search by name/SKU | Enter text — results filter |
+
+### 21.2 Create Product
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click "Add Product" | Form with name, SKU, category, price, cost price, size, color, material, images |
+| 2 | Submit empty | Validation on name, SKU, price |
+| 3 | Set compare-at price | Original price shown for discount display |
+| 4 | Upload images | Product images in gallery |
+| 5 | Submit | Product created with inventory record (quantity 0) |
+
+### 21.3 Inventory Management
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/products/inventory` | Table with product, quantity, reserved, available, reorder level |
+| 2 | Update stock | Quantity updated |
+| 3 | View low stock alerts | Products below reorder level highlighted |
+| 4 | Adjust reorder level | Set threshold for alerts |
+
+### 21.4 Supplier Management
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/suppliers` | List of suppliers with name, company, payment terms, lead time |
+| 2 | Create supplier | Add name, email, phone, company, payment terms |
+| 3 | View supplier detail | Contact info, order history with supplier |
+
+### 21.5 Orders
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/orders` | DataTable with columns: Order #, Customer, Status, Items, Total, Date |
+| 2 | Filter by Status | Select Pending/Confirmed/Shipped/Delivered — filters |
+| 3 | Click order | Order detail with items, pricing, shipping, payment info |
+| 4 | Update order status | Status changes reflected in timeline |
+
+### 21.6 Coupons
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Create coupon | Set code, discount type (% or fixed), value, min order, usage limit, validity |
+| 2 | Apply coupon to order | Discount applied, usage count incremented |
+| 3 | Expired/invalid coupon | Validation error on application |
+
+---
+
+## 22. Employee Management Flow
+
+### 22.1 Employee List
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/employees` | DataTable with all organization members: Name, Role, Email, Phone, Department |
+| 2 | Filter by Role | Select role — table filters |
+| 3 | Click employee | Employee detail page |
+
+### 22.2 Employee Detail
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | View profile | Full name, role, email, phone, department, designation, date of joining |
+| 2 | View attendance | Monthly attendance calendar/summary |
+| 3 | View leaves | Leave history with status |
+| 4 | View payroll | Salary history by month |
+
+### 22.3 Attendance
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/employees/attendance` | Daily attendance records with status |
+| 2 | Mark attendance | Set Present/Absent/Late/Half-Day |
+| 3 | Filter by month | View monthly attendance summary |
+| 4 | Late check-in | Late minutes tracked |
+
+### 22.4 Leave Management
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/employees/leaves` | Leave requests list with status |
+| 2 | Apply for leave | Select type (Sick/Casual/Annual), dates, reason |
+| 3 | Approve/Reject (Manager/HR) | Status changes, approved_by and timestamp set |
+| 4 | View leave balance | Remaining leaves by type |
+
+### 22.5 Payroll
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/employees/payroll` | Payroll records by month/year |
+| 2 | View payslip | Basic salary, allowances, deductions, bonus, tax, net salary |
+| 3 | Process payroll | Payment status changes to Paid |
+
+### 22.6 Performance Review
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Create review | Set review period, rating (0-5), feedback, goals, achievements |
+| 2 | View review history | Past reviews listed for employee |
+
+---
+
+## 23. Customer Portal Flow
+
+### 23.1 Customer Dashboard
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Login as Customer role | Navigate to `/portal` |
+| 2 | View portal dashboard | My Orders, My Tickets, My Properties |
+| 3 | View orders | Orders placed by this customer with status |
+| 4 | View tickets | Support tickets raised by this customer |
+| 5 | View properties | Properties linked to this customer |
+
+### 23.2 Customer Actions
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Create ticket | Raise support ticket from portal |
+| 2 | Track order | View order status and details |
+| 3 | Schedule appointment | (Future) Book site visit / meeting |
+
+---
+
+## 24. Helpdesk — Tickets Flow
+
+### 24.1 Ticket List
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/tickets` | DataTable with columns: Title, Status, Priority, Channel, Customer, Assigned To, Created |
+| 2 | Filter by Status | Select Open/In Progress/Resolved/Closed |
+| 3 | Filter by Priority | Select Low/Medium/High/Critical |
+| 4 | Filter by Channel | Select Email/WhatsApp/Web Portal |
+
+### 24.2 Create Ticket
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click "New Ticket" | Form with title, description, channel, priority |
+| 2 | Submit empty | Validation on title |
+| 3 | Select channel | Web Portal, Email, or WhatsApp |
+| 4 | Link to customer/lead | Optional association |
+| 5 | Submit | Ticket created with "Open" status |
+
+### 24.3 Ticket Detail (Conversation View)
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click a ticket | Conversation view showing all messages |
+| 2 | Reply to ticket | Add message, attach files |
+| 3 | Change status | Update to In Progress / Resolved / Closed |
+| 4 | Assign to agent | Ticket assigned |
+| 5 | View message history | Thread with timestamps and sender type (Agent/Customer) |
+
+---
+
+## 25. Role-Specific Dashboards Flow
+
+### 25.1 Main Dashboard (`/dashboard`)
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to `/dashboard` | All-role dashboard with total leads, conversions, charts |
+
+### 25.2 Employer Dashboard (`/dashboard/employer`)
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Login as Employer/Super Admin/Admin | Navigate to `/dashboard/employer` |
+| 2 | View KPI cards | Total Revenue, Total Leads, Total Employees, Marketing Spend |
+| 3 | Revenue chart | Monthly revenue bar chart |
+| 4 | Leads by source chart | Distribution pie chart |
+| 5 | Employee performance | Bar chart ranking team members |
+| 6 | Active campaigns | List of running campaigns |
+
+### 25.3 Employee Dashboard (`/dashboard/employee`)
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Login as Employee | Navigate to `/dashboard/employee` |
+| 2 | View KPI cards | My Tasks (pending/completed), Attendance this month, Upcoming Leaves |
+| 3 | Today's tasks | Task list for current day |
+| 4 | Recent leads | Leads assigned to me |
+
+### 25.4 Marketing Dashboard (`/dashboard/marketing`)
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Login as Marketing Executive | Navigate to `/dashboard/marketing` |
+| 2 | View KPI cards | Total Campaigns, Active, Total Spend, Cost per Conversion |
+| 3 | Campaign performance | Bar chart of campaign engagement |
+| 4 | Google Ads CPC | CPC trend chart |
+| 5 | AdSense earnings | Daily revenue chart |
+
+### 25.5 Sales Dashboard (`/dashboard/sales`)
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Login as Sales Manager | Navigate to `/dashboard/sales` |
+| 2 | View KPI cards | Pipeline Value, Won Deals, Lost Deals, Avg Deal Size, Conversion Rate |
+| 3 | Pipeline by stage | Horizontal bar chart |
+| 4 | Monthly revenue | Line chart showing revenue trend |
+| 5 | Top performers | Bar chart ranking sales team |
+| 6 | Recent deals | Table of active deals |
+
+---
+
+## 26. Full System Navigation
+
+### 26.1 Sidebar Menu Structure
+
+After logging in, the sidebar shows grouped navigation:
+
+**CRM**
+- Dashboard (main)
+- Dashboard → Employer / Employee / Marketing / Sales
+- Leads
+- Pipeline
+- Tasks
+- Documents
+
+**Real Estate**
+- Properties
+
+**Ecommerce**
+- Products → Inventory
+- Orders
+- Suppliers
+
+**Marketing**
+- Campaigns
+- Google Ads
+- AdSense
+
+**HR**
+- Employees → Attendance / Leaves / Payroll
+
+**Support**
+- Tickets
+
+**Customer Portal**
+- Portal
+
+**System**
+- Audit Logs
+- Settings
+
+### 26.2 Verify Navigation
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Login as Super Admin | All navigation items visible |
+| 2 | Login as Employee | HR, Marketing, Ecommerce sections hidden |
+| 3 | Login as Customer | Only Portal and Tickets visible |
+| 4 | Login as Viewer | Read-only sections visible, no create/edit buttons |
+| 5 | Mobile view | Sidebar collapses to hamburger menu with grouped items |

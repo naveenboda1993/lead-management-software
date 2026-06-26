@@ -50,7 +50,7 @@ export async function logAuditEvent(
 export async function logActivity(
   supabase: Awaited<ReturnType<typeof getSupabase>>,
   params: {
-    lead_id: string;
+    lead_id?: string | null;
     type: string;
     description: string;
     created_by: string;
@@ -58,7 +58,7 @@ export async function logActivity(
   }
 ) {
   const { error } = await supabase.from("activities").insert({
-    lead_id: params.lead_id,
+    lead_id: params.lead_id ?? null,
     type: params.type,
     description: params.description,
     created_by: params.created_by,
