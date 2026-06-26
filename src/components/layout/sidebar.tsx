@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -26,6 +27,8 @@ import {
   Ticket,
   Globe,
   Layers,
+  Bell,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -34,6 +37,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUser } from "@/hooks/use-user";
+import { useNotifications } from "@/hooks/use-notifications";
+import { usePermissions } from "@/hooks/use-permissions";
 import { ROLES } from "@/lib/constants";
 import type { Role } from "@/types";
 
@@ -42,74 +47,85 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  subject?: string;
+}
+
 interface NavSection {
   label: string;
-  items: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
+  items: NavItem[];
 }
 
 const navSections: NavSection[] = [
   {
     label: "CRM",
     items: [
-      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/dashboard/employer", label: "Employer Dashboard", icon: LayoutDashboard },
-      { href: "/dashboard/employee", label: "Employee Dashboard", icon: LayoutDashboard },
-      { href: "/dashboard/marketing", label: "Marketing Dashboard", icon: LayoutDashboard },
-      { href: "/dashboard/sales", label: "Sales Dashboard", icon: LayoutDashboard },
-      { href: "/leads", label: "Leads", icon: Users },
-      { href: "/pipeline", label: "Pipeline", icon: GitBranch },
-      { href: "/tasks", label: "Tasks", icon: CheckSquare },
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, subject: "report" },
+      { href: "/dashboard/employer", label: "Employer Dashboard", icon: LayoutDashboard, subject: "report" },
+      { href: "/dashboard/employee", label: "Employee Dashboard", icon: LayoutDashboard, subject: "report" },
+      { href: "/dashboard/marketing", label: "Marketing Dashboard", icon: LayoutDashboard, subject: "report" },
+      { href: "/dashboard/sales", label: "Sales Dashboard", icon: LayoutDashboard, subject: "report" },
+      { href: "/leads", label: "Leads", icon: Users, subject: "lead" },
+      { href: "/pipeline", label: "Pipeline", icon: GitBranch, subject: "lead" },
+      { href: "/tasks", label: "Tasks", icon: CheckSquare, subject: "task" },
     ],
   },
   {
     label: "Real Estate",
     items: [
-      { href: "/properties", label: "Properties", icon: Building2 },
+      { href: "/properties", label: "Properties", icon: Building2, subject: "property" },
+      { href: "/brokers", label: "Brokers", icon: Users, subject: "broker" },
     ],
   },
   {
     label: "Ecommerce",
     items: [
-      { href: "/products", label: "Products", icon: Package },
-      { href: "/orders", label: "Orders", icon: ShoppingCart },
-      { href: "/suppliers", label: "Suppliers", icon: Truck },
+      { href: "/products", label: "Products", icon: Package, subject: "product" },
+      { href: "/orders", label: "Orders", icon: ShoppingCart, subject: "order" },
+      { href: "/suppliers", label: "Suppliers", icon: Truck, subject: "supplier" },
+      { href: "/coupons", label: "Coupons", icon: DollarSign, subject: "coupon" },
     ],
   },
   {
     label: "Marketing",
     items: [
-      { href: "/campaigns", label: "Campaigns", icon: Megaphone },
-      { href: "/google-ads", label: "Google Ads", icon: BarChart3 },
-      { href: "/adsense", label: "AdSense", icon: DollarSign },
+      { href: "/campaigns", label: "Campaigns", icon: Megaphone, subject: "campaign" },
+      { href: "/google-ads", label: "Google Ads", icon: BarChart3, subject: "ads" },
+      { href: "/adsense", label: "AdSense", icon: DollarSign, subject: "adsense" },
     ],
   },
   {
     label: "HR",
     items: [
-      { href: "/employees", label: "Employees", icon: UserCog },
-      { href: "/employees/attendance", label: "Attendance", icon: CalendarCheck },
-      { href: "/employees/leaves", label: "Leaves", icon: CalendarRange },
-      { href: "/employees/payroll", label: "Payroll", icon: Wallet },
+      { href: "/employees", label: "Employees", icon: UserCog, subject: "user" },
+      { href: "/employees/attendance", label: "Attendance", icon: CalendarCheck, subject: "attendance" },
+      { href: "/employees/leaves", label: "Leaves", icon: CalendarRange, subject: "leave" },
+      { href: "/employees/payroll", label: "Payroll", icon: Wallet, subject: "payroll" },
+      { href: "/employees/performance-reviews", label: "Performance Reviews", icon: Star, subject: "performance_review" },
     ],
   },
   {
     label: "Support",
     items: [
-      { href: "/tickets", label: "Tickets", icon: Ticket },
+      { href: "/tickets", label: "Tickets", icon: Ticket, subject: "ticket" },
     ],
   },
   {
     label: "Customer Portal",
     items: [
-      { href: "/portal", label: "Portal", icon: Globe },
+      { href: "/portal", label: "Portal", icon: Globe, subject: "portal" },
     ],
   },
   {
     label: "System",
     items: [
-      { href: "/documents", label: "Documents", icon: FileText },
-      { href: "/audit-logs", label: "Audit Logs", icon: ScrollText },
-      { href: "/settings", label: "Settings", icon: Settings },
+      { href: "/notifications", label: "Notifications", icon: Bell },
+      { href: "/documents", label: "Documents", icon: FileText, subject: "document" },
+      { href: "/audit-logs", label: "Audit Logs", icon: ScrollText, subject: "report" },
+      { href: "/settings", label: "Settings", icon: Settings, subject: "setting" },
     ],
   },
 ];
@@ -117,6 +133,20 @@ const navSections: NavSection[] = [
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, loading } = useUser();
+  const { unreadCount } = useNotifications();
+  const { can, loading: permLoading } = usePermissions();
+
+  const visibleSections = useMemo(() => {
+    if (permLoading) return navSections;
+    return navSections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter(
+          (item) => !item.subject || can("read", item.subject) || can("manage", item.subject)
+        ),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [permLoading, can]);
 
   const initials = user?.name
     ? user.name
@@ -161,7 +191,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <ScrollArea className="flex-1 px-3 py-2">
           <nav className="flex flex-col gap-4">
-            {navSections.map((section) => (
+            {visibleSections.map((section) => (
               <div key={section.label}>
                 <span className="flex items-center gap-2 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <Layers className="h-3 w-3" />
@@ -187,6 +217,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                       >
                         <Icon className="h-4 w-4 shrink-0" />
                         <span>{item.label}</span>
+                        {item.href === "/notifications" && unreadCount > 0 && (
+                          <Badge
+                            variant="default"
+                            className="ml-auto h-5 min-w-[1.25rem] px-1 text-[10px]"
+                          >
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </Badge>
+                        )}
                       </Link>
                     );
                   })}

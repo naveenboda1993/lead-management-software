@@ -2,11 +2,13 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Upload } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useLeads, useCreateLead, useUpdateLead, useDeleteLead } from "@/hooks/use-leads";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -37,6 +39,16 @@ export default function LeadsPage() {
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [createOpen, setCreateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    success: number;
+    failed: number;
+    duplicates: number;
+    total: number;
+    failedRows?: { row: number; error: string }[];
+  } | null>(null);
   const [, setBulkLoading] = useState(false);
 
   const handleCreateLead = async (data: CreateLeadInput) => {
@@ -46,6 +58,28 @@ export default function LeadsPage() {
       setCreateOpen(false);
     } catch {
       toast.error("Failed to create lead");
+    }
+  };
+
+  const handleImport = async () => {
+    if (!importFile) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", importFile);
+      const res = await fetch("/api/leads/import", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Import failed");
+      setImportResult(json.data.summary);
+      if (json.data.failed_rows) {
+        setImportResult((prev) => prev ? { ...prev, failedRows: json.data.failed_rows } : null);
+      }
+      toast.success(`Imported ${json.data.summary.success} leads`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Import failed");
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -229,10 +263,16 @@ export default function LeadsPage() {
             Manage and track your sales leads
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Lead
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => { setImportFile(null); setImportResult(null); setImportOpen(true); }}>
+            <Upload className="mr-2 h-4 w-4" />
+            Import CSV
+          </Button>
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Lead
+          </Button>
+        </div>
       </div>
 
       <LeadFilters filters={filters} onFiltersChange={setFilters} />
@@ -260,6 +300,65 @@ export default function LeadsPage() {
           onRowClick={handleRowClick}
         />
       )}
+
+      <Dialog open={importOpen} onOpenChange={(o) => { if (!o) { setImportOpen(false); setImportFile(null); setImportResult(null); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Import Leads from CSV</DialogTitle></DialogHeader>
+          <div className="grid gap-4">
+            {importResult ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">Import complete</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-lg border p-3 text-center">
+                    <p className="text-2xl font-bold text-green-600">{importResult.success}</p>
+                    <p className="text-xs text-muted-foreground">Imported</p>
+                  </div>
+                  <div className="rounded-lg border p-3 text-center">
+                    <p className="text-2xl font-bold text-red-600">{importResult.failed}</p>
+                    <p className="text-xs text-muted-foreground">Failed</p>
+                  </div>
+                  <div className="rounded-lg border p-3 text-center">
+                    <p className="text-2xl font-bold text-yellow-600">{importResult.duplicates}</p>
+                    <p className="text-xs text-muted-foreground">Duplicates</p>
+                  </div>
+                </div>
+                {importResult.failedRows && importResult.failedRows.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">Failed rows:</p>
+                    <div className="max-h-[200px] overflow-y-auto rounded border p-2 text-xs">
+                      {importResult.failedRows.map((r, i) => (
+                        <p key={i} className="text-red-600">
+                          Row {r.row}: {r.error}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <Button onClick={() => { setImportOpen(false); setImportFile(null); setImportResult(null); }}>
+                  Done
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Select CSV file</Label>
+                  <Input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  CSV must include at least first_name, last_name, email, and mobile columns.
+                </p>
+                <Button onClick={handleImport} disabled={!importFile || importing}>
+                  {importing ? "Importing..." : "Import"}
+                </Button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

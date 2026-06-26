@@ -5,24 +5,24 @@
 -- =====================================================
 
 -- =====================================================
--- NEW ENUMS
+-- NEW ENUMS (UPPERCASE to match TypeScript enums)
 -- =====================================================
 
-CREATE TYPE property_type AS ENUM ('apartment', 'villa', 'commercial', 'land');
-CREATE TYPE property_status AS ENUM ('available', 'sold', 'rented', 'under_offer', 'under_construction');
-CREATE TYPE ticket_status AS ENUM ('open', 'in_progress', 'resolved', 'closed');
-CREATE TYPE ticket_channel AS ENUM ('email', 'whatsapp', 'web_portal');
-CREATE TYPE campaign_type AS ENUM ('sms', 'email', 'whatsapp');
-CREATE TYPE campaign_status AS ENUM ('draft', 'scheduled', 'running', 'completed', 'paused', 'cancelled');
-CREATE TYPE call_direction AS ENUM ('inbound', 'outbound');
-CREATE TYPE call_status AS ENUM ('completed', 'missed', 'busy', 'failed', 'ringing');
-CREATE TYPE attendance_status AS ENUM ('present', 'absent', 'late', 'half_day', 'holiday', 'leave');
-CREATE TYPE leave_status AS ENUM ('pending', 'approved', 'rejected', 'cancelled');
-CREATE TYPE leave_type AS ENUM ('sick', 'casual', 'annual', 'maternity', 'paternity', 'unpaid');
-CREATE TYPE product_category AS ENUM ('mens_wear', 'womens_wear', 'kids_wear', 'accessories', 'footwear');
-CREATE TYPE order_status AS ENUM ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned');
-CREATE TYPE commission_status AS ENUM ('pending', 'paid', 'cancelled');
-CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'cancelled');
+CREATE TYPE property_type AS ENUM ('APARTMENT', 'VILLA', 'COMMERCIAL', 'LAND');
+CREATE TYPE property_status AS ENUM ('AVAILABLE', 'SOLD', 'RENTED', 'UNDER_OFFER', 'UNDER_CONSTRUCTION');
+CREATE TYPE ticket_status AS ENUM ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED');
+CREATE TYPE ticket_channel AS ENUM ('EMAIL', 'WHATSAPP', 'WEB_PORTAL');
+CREATE TYPE campaign_type AS ENUM ('SMS', 'EMAIL', 'WHATSAPP');
+CREATE TYPE campaign_status AS ENUM ('DRAFT', 'SCHEDULED', 'RUNNING', 'COMPLETED', 'PAUSED', 'CANCELLED');
+CREATE TYPE call_direction AS ENUM ('INBOUND', 'OUTBOUND');
+CREATE TYPE call_status AS ENUM ('COMPLETED', 'MISSED', 'BUSY', 'FAILED', 'RINGING');
+CREATE TYPE attendance_status AS ENUM ('PRESENT', 'ABSENT', 'LATE', 'HALF_DAY', 'HOLIDAY', 'LEAVE');
+CREATE TYPE leave_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED');
+CREATE TYPE leave_type AS ENUM ('SICK', 'CASUAL', 'ANNUAL', 'MATERNITY', 'PATERNITY', 'UNPAID');
+CREATE TYPE product_category AS ENUM ('MENS_WEAR', 'WOMENS_WEAR', 'KIDS_WEAR', 'ACCESSORIES', 'FOOTWEAR');
+CREATE TYPE order_status AS ENUM ('PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED');
+CREATE TYPE commission_status AS ENUM ('PENDING', 'PAID', 'CANCELLED');
+CREATE TYPE payment_status AS ENUM ('PENDING', 'PAID', 'CANCELLED');
 
 -- =====================================================
 -- BROKERS
@@ -50,7 +50,7 @@ CREATE TABLE properties (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   property_name TEXT NOT NULL,
   property_type property_type NOT NULL,
-  status property_status NOT NULL DEFAULT 'available',
+  status property_status NOT NULL DEFAULT 'AVAILABLE',
   description TEXT,
   location TEXT NOT NULL,
   address TEXT,
@@ -86,7 +86,7 @@ CREATE TABLE commissions (
   deal_value DECIMAL(14,2) NOT NULL,
   commission_amount DECIMAL(14,2) NOT NULL,
   commission_rate DECIMAL(5,2) NOT NULL,
-  status commission_status NOT NULL DEFAULT 'pending',
+  status commission_status NOT NULL DEFAULT 'PENDING',
   paid_at TIMESTAMPTZ,
   organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
@@ -101,9 +101,9 @@ CREATE TABLE tickets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   description TEXT,
-  status ticket_status NOT NULL DEFAULT 'open',
-  channel ticket_channel NOT NULL DEFAULT 'web_portal',
-  priority lead_priority NOT NULL DEFAULT 'medium',
+  status ticket_status NOT NULL DEFAULT 'OPEN',
+  channel ticket_channel NOT NULL DEFAULT 'WEB_PORTAL',
+  priority lead_priority NOT NULL DEFAULT 'MEDIUM',
   customer_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   lead_id UUID REFERENCES leads(id) ON DELETE SET NULL,
   assigned_to UUID REFERENCES profiles(id) ON DELETE SET NULL,
@@ -130,7 +130,7 @@ CREATE TABLE campaigns (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   type campaign_type NOT NULL,
-  status campaign_status NOT NULL DEFAULT 'draft',
+  status campaign_status NOT NULL DEFAULT 'DRAFT',
   subject TEXT,
   content TEXT NOT NULL,
   recipient_list TEXT[] NOT NULL DEFAULT '{}',
@@ -232,7 +232,7 @@ CREATE TABLE orders (
   order_number TEXT NOT NULL UNIQUE,
   customer_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   lead_id UUID REFERENCES leads(id) ON DELETE SET NULL,
-  status order_status NOT NULL DEFAULT 'pending',
+  status order_status NOT NULL DEFAULT 'PENDING',
   items JSONB NOT NULL DEFAULT '[]',
   subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
   discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -275,7 +275,7 @@ CREATE TABLE attendance (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   employee_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   date DATE NOT NULL,
-  status attendance_status NOT NULL DEFAULT 'present',
+  status attendance_status NOT NULL DEFAULT 'PRESENT',
   check_in TIMESTAMPTZ,
   check_out TIMESTAMPTZ,
   late_minutes INTEGER DEFAULT 0,
@@ -295,7 +295,7 @@ CREATE TABLE leaves (
   end_date DATE NOT NULL,
   total_days INTEGER NOT NULL,
   reason TEXT NOT NULL,
-  status leave_status NOT NULL DEFAULT 'pending',
+  status leave_status NOT NULL DEFAULT 'PENDING',
   approved_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
   approved_at TIMESTAMPTZ,
   organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE NOT NULL,
@@ -314,7 +314,7 @@ CREATE TABLE payroll (
   bonus DECIMAL(12,2) NOT NULL DEFAULT 0,
   tax_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
   net_salary DECIMAL(12,2) NOT NULL DEFAULT 0,
-  payment_status payment_status NOT NULL DEFAULT 'pending',
+  payment_status payment_status NOT NULL DEFAULT 'PENDING',
   paid_at TIMESTAMPTZ,
   organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),

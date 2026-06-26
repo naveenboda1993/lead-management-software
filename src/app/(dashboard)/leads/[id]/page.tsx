@@ -8,13 +8,29 @@ import {
   Trash2,
   Sparkles,
   Loader2,
+  Plus,
+  Home,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Lightbulb,
 } from "lucide-react";
 import { useLead, useUpdateLead, useDeleteLead, useLeadActivities } from "@/hooks/use-leads";
 import { useTasks } from "@/hooks/use-tasks";
 import { useDocuments } from "@/hooks/use-documents";
+import { usePropertyInterestsByLead, useCreatePropertyInterest, useDeletePropertyInterest } from "@/hooks/use-property-interests";
+import { useViewingsByLead, useCreatePropertyViewing, useUpdatePropertyViewing } from "@/hooks/use-property-viewings";
+import { useProperties } from "@/hooks/use-properties";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -44,6 +60,9 @@ import {
   PRIORITY_LABELS,
   PRIORITY_COLORS,
   LEAD_SOURCE_LABELS,
+  PROPERTY_STATUS_LABELS,
+  PROPERTY_STATUS_COLORS,
+  PROPERTY_TYPE_LABELS,
 } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { createLeadSchema } from "@/lib/validations/lead";
@@ -62,10 +81,24 @@ export default function LeadDetailPage() {
   const { data: activities, isLoading: activitiesLoading } = useLeadActivities(leadId);
   const { data: tasks, isLoading: tasksLoading } = useTasks(leadId);
   const { data: documents, isLoading: documentsLoading } = useDocuments(leadId);
+  const { data: propertyInterests, isLoading: propertyInterestsLoading } = usePropertyInterestsByLead(leadId);
+  const { data: leadViewings, isLoading: leadViewingsLoading } = useViewingsByLead(leadId);
+  const createPropertyInterest = useCreatePropertyInterest();
+  const deletePropertyInterest = useDeletePropertyInterest();
+  const createPropertyViewing = useCreatePropertyViewing();
+  const updatePropertyViewing = useUpdatePropertyViewing();
+  const { data: allProperties, isLoading: allPropertiesLoading } = useProperties();
 
   const [editing, setEditing] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [addPropertyOpen, setAddPropertyOpen] = useState(false);
+  const [scheduleViewingOpen, setScheduleViewingOpen] = useState(false);
+  const [propertyInterestForm, setPropertyInterestForm] = useState({ property_id: "", interest_level: "MEDIUM", notes: "" });
+  const [viewingForm, setViewingForm] = useState({ property_interest_id: "", scheduled_at: "" });
+  const [recommendationsOpen, setRecommendationsOpen] = useState(false);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
 
   const handleUpdate = async (data: CreateLeadInput) => {
     try {
@@ -88,6 +121,55 @@ export default function LeadDetailPage() {
     } finally {
       setDeleteLoading(false);
     }
+  };
+
+  const handleAddPropertyInterest = async () => {
+    if (!propertyInterestForm.property_id) { toast.error("Select a property"); return; }
+    try {
+      await createPropertyInterest.mutateAsync({
+        lead_id: leadId,
+        property_id: propertyInterestForm.property_id,
+        interest_level: propertyInterestForm.interest_level as any,
+        notes: propertyInterestForm.notes || null,
+      });
+      toast.success("Property interest added");
+      setAddPropertyOpen(false);
+      setPropertyInterestForm({ property_id: "", interest_level: "MEDIUM", notes: "" });
+    } catch { toast.error("Failed to add interest"); }
+  };
+
+  const handleScheduleViewing = async () => {
+    if (!viewingForm.property_interest_id || !viewingForm.scheduled_at) {
+      toast.error("Fill all fields"); return;
+    }
+    const interest = propertyInterests?.find(i => i.id === viewingForm.property_interest_id);
+    if (!interest) { toast.error("Interest not found"); return; }
+    try {
+      await createPropertyViewing.mutateAsync({
+        property_interest_id: viewingForm.property_interest_id,
+        lead_id: leadId,
+        property_id: interest.property_id,
+        scheduled_at: viewingForm.scheduled_at,
+      });
+      toast.success("Viewing scheduled");
+      setScheduleViewingOpen(false);
+      setViewingForm({ property_interest_id: "", scheduled_at: "" });
+    } catch { toast.error("Failed to schedule viewing"); }
+  };
+
+  const handleCompleteViewing = async (viewingId: string) => {
+    try { await updatePropertyViewing.mutateAsync({ id: viewingId, status: "COMPLETED" }); toast.success("Viewing completed"); }
+    catch { toast.error("Failed to update viewing"); }
+  };
+
+  const handleCancelViewing = async (viewingId: string) => {
+    try { await updatePropertyViewing.mutateAsync({ id: viewingId, status: "CANCELLED" }); toast.success("Viewing cancelled"); }
+    catch { toast.error("Failed to cancel viewing"); }
+  };
+
+  const interestLevelColor = (level: string) => {
+    const colors: Record<string, string> = { LOW: "bg-gray-100 text-gray-700", MEDIUM: "bg-yellow-100 text-yellow-700", HIGH: "bg-orange-100 text-orange-700", VERY_HIGH: "bg-red-100 text-red-700" };
+    return colors[level] ?? "bg-gray-100 text-gray-700";
   };
 
   if (isLoading) {
@@ -206,6 +288,37 @@ export default function LeadDetailPage() {
               >
                 Summarize Lead
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={async () => {
+                  setRecommendationsLoading(true);
+                  setRecommendationsOpen(true);
+                  try {
+                    const res = await fetch("/api/ai/property-recommendation", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        buyer_preferences: {
+                          budget: lead.estimated_deal_value,
+                          location: lead.company || lead.industry,
+                          property_type: null,
+                          bedrooms: null,
+                          notes: lead.notes,
+                          tags: lead.tags,
+                        },
+                      }),
+                    });
+                    const data = await res.json();
+                    setRecommendations(data.data?.recommendations ?? []);
+                  } catch {
+                    toast.error("Failed to get recommendations");
+                  } finally {
+                    setRecommendationsLoading(false);
+                  }
+                }}
+              >
+                <Lightbulb className="mr-2 h-4 w-4" />
+                Recommend Properties
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -245,6 +358,14 @@ export default function LeadDetailPage() {
             {documents && documents.length > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {documents.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="properties">
+            Properties
+            {propertyInterests && propertyInterests.length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {propertyInterests.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -466,7 +587,223 @@ export default function LeadDetailPage() {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="properties" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Interested Properties</h3>
+            <Button size="sm" onClick={() => setAddPropertyOpen(true)} disabled={createPropertyInterest.isPending}>
+              <Plus className="mr-2 h-4 w-4" /> Add Property
+            </Button>
+          </div>
+
+          {propertyInterestsLoading ? (
+            <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+          ) : !propertyInterests || propertyInterests.length === 0 ? (
+            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No properties linked to this lead yet.</CardContent></Card>
+          ) : (
+            <div className="space-y-3">
+              {propertyInterests.map((interest) => {
+                const views = leadViewings?.filter(v => v.property_interest_id === interest.id) ?? [];
+                return (
+                  <Card key={interest.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Home className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">{interest.property?.property_name ?? "Unknown Property"}</p>
+                            <p className="text-xs text-muted-foreground">{interest.property?.city}, {interest.property?.state}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={interestLevelColor(interest.interest_level)}>{interest.interest_level}</Badge>
+                          <Badge variant="outline">{interest.status}</Badge>
+                          <Button variant="ghost" size="sm" onClick={() => deletePropertyInterest.mutate(interest.id)} disabled={deletePropertyInterest.isPending}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                      {interest.property && (
+                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-2">
+                          <span>{PROPERTY_TYPE_LABELS[interest.property.property_type]}</span>
+                          <span>{formatCurrency(interest.property.price)}</span>
+                          <span>{interest.property.bedrooms} bed · {interest.property.bathrooms} bath</span>
+                        </div>
+                      )}
+                      {interest.notes && <p className="text-xs text-muted-foreground mb-2">{interest.notes}</p>}
+                      <div className="border-t pt-3 mt-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium">Viewings ({views.length})</span>
+                          <Button variant="outline" size="sm" onClick={() => { setViewingForm(p => ({ ...p, property_interest_id: interest.id })); setScheduleViewingOpen(true); }}>
+                            <Calendar className="mr-2 h-3 w-3" /> Schedule
+                          </Button>
+                        </div>
+                        {views.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">No viewings scheduled</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {views.map((viewing) => (
+                              <div key={viewing.id} className="flex items-center justify-between rounded border p-2">
+                                <div>
+                                  <p className="text-xs">{formatDate(viewing.scheduled_at)}</p>
+                                  <Badge variant="outline" className="text-[10px]">{viewing.status}</Badge>
+                                </div>
+                                <div className="flex gap-1">
+                                  {viewing.status === "SCHEDULED" && (
+                                    <>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCompleteViewing(viewing.id)} title="Mark completed">
+                                        <CheckCircle className="h-3 w-3 text-green-600" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCancelViewing(viewing.id)} title="Cancel">
+                                        <XCircle className="h-3 w-3 text-destructive" />
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
+
+      <Dialog open={addPropertyOpen} onOpenChange={setAddPropertyOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Link Property</DialogTitle>
+            <DialogDescription>Associate a property with this lead.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Property</label>
+              <Select value={propertyInterestForm.property_id} onValueChange={(v) => setPropertyInterestForm(p => ({ ...p, property_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select property..." /></SelectTrigger>
+                <SelectContent>
+                  {allPropertiesLoading ? (
+                    <SelectItem value="" disabled>Loading...</SelectItem>
+                  ) : (
+                    allProperties?.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.property_name} - {p.city}, {formatCurrency(p.price)}</SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Interest Level</label>
+              <Select value={propertyInterestForm.interest_level} onValueChange={(v) => setPropertyInterestForm(p => ({ ...p, interest_level: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LOW">Low</SelectItem>
+                  <SelectItem value="MEDIUM">Medium</SelectItem>
+                  <SelectItem value="HIGH">High</SelectItem>
+                  <SelectItem value="VERY_HIGH">Very High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Notes</label>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder="Optional notes..."
+                value={propertyInterestForm.notes}
+                onChange={(e) => setPropertyInterestForm(p => ({ ...p, notes: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddPropertyOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddPropertyInterest} disabled={createPropertyInterest.isPending}>Link Property</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={recommendationsOpen} onOpenChange={(o) => { if (!o) setRecommendationsOpen(false); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Property Recommendations</DialogTitle>
+            <DialogDescription>AI-suggested properties matching this lead&apos;s profile.</DialogDescription>
+          </DialogHeader>
+          {recommendationsLoading ? (
+            <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+          ) : recommendations.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              <Lightbulb className="mx-auto h-8 w-8 mb-2 opacity-50" />
+              No recommendations found. Try updating the lead&apos;s preferences.
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+              {recommendations.map((rec: any, i: number) => (
+                <Card key={rec.property_id ?? i}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <p className="font-medium">{rec.title ?? `Property ${i + 1}`}</p>
+                        {rec.company && <p className="text-xs text-muted-foreground">{rec.company}</p>}
+                        {rec.value && <p className="text-sm font-medium">{formatCurrency(rec.value)}</p>}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold">{rec.score ?? 0}%</div>
+                        <p className="text-xs text-muted-foreground">Match</p>
+                      </div>
+                    </div>
+                    {rec.match_reasons && rec.match_reasons.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {rec.match_reasons.map((r: string, j: number) => (
+                          <Badge key={j} variant="secondary" className="text-[10px]">{r}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={scheduleViewingOpen} onOpenChange={setScheduleViewingOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Viewing</DialogTitle>
+            <DialogDescription>Schedule a property visit for this lead.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Interest</label>
+              <Select value={viewingForm.property_interest_id} onValueChange={(v) => setViewingForm(p => ({ ...p, property_interest_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select interest..." /></SelectTrigger>
+                <SelectContent>
+                  {propertyInterests?.map((i) => (
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.property?.property_name ?? "Unknown"} - {i.interest_level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Date & Time</label>
+              <input
+                type="datetime-local"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={viewingForm.scheduled_at}
+                onChange={(e) => setViewingForm(p => ({ ...p, scheduled_at: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setScheduleViewingOpen(false)}>Cancel</Button>
+            <Button onClick={handleScheduleViewing} disabled={createPropertyViewing.isPending}>Schedule</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>

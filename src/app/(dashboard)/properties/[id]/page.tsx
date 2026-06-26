@@ -2,12 +2,22 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Edit3, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Edit3, Trash2, Loader2, Plus, Calendar, CheckCircle, XCircle } from "lucide-react";
 import { useProperty, useUpdateProperty, useDeleteProperty } from "@/hooks/use-properties";
+import { usePropertyInterestsByProperty, useCreatePropertyInterest, useUpdatePropertyInterest, useDeletePropertyInterest } from "@/hooks/use-property-interests";
+import { useViewingsByProperty, useCreatePropertyViewing, useUpdatePropertyViewing } from "@/hooks/use-property-viewings";
+import { useLeads } from "@/hooks/use-leads";
 import type { PropertyType, PropertyStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -35,9 +45,24 @@ export default function PropertyDetailPage() {
   const updateProperty = useUpdateProperty();
   const deleteProperty = useDeleteProperty();
 
+  const { data: interests, isLoading: interestsLoading } = usePropertyInterestsByProperty(propertyId);
+  const { data: viewings, isLoading: viewingsLoading } = useViewingsByProperty(propertyId);
+  const createInterest = useCreatePropertyInterest();
+  const updateInterest = useUpdatePropertyInterest();
+  const deleteInterest = useDeletePropertyInterest();
+  const createViewing = useCreatePropertyViewing();
+  const updateViewing = useUpdatePropertyViewing();
+  const { data: allLeads, isLoading: leadsLoading } = useLeads();
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editing, setEditing] = useState(false);
+
+  const [addInterestOpen, setAddInterestOpen] = useState(false);
+  const [scheduleViewingOpen, setScheduleViewingOpen] = useState(false);
+  const [selectedInterestId, setSelectedInterestId] = useState<string | null>(null);
+  const [interestForm, setInterestForm] = useState({ lead_id: "", interest_level: "MEDIUM", notes: "" });
+  const [viewingForm, setViewingForm] = useState({ property_interest_id: "", lead_id: "", scheduled_at: "" });
   const [formData, setFormData] = useState({
     property_name: "",
     property_type: "APARTMENT",
@@ -94,6 +119,64 @@ export default function PropertyDetailPage() {
     } finally {
       setDeleteLoading(false);
     }
+  };
+
+  const handleAddInterest = async () => {
+    if (!interestForm.lead_id) { toast.error("Select a lead"); return; }
+    try {
+      await createInterest.mutateAsync({
+        lead_id: interestForm.lead_id,
+        property_id: propertyId,
+        interest_level: interestForm.interest_level as any,
+        notes: interestForm.notes || null,
+      });
+      toast.success("Interest added");
+      setAddInterestOpen(false);
+      setInterestForm({ lead_id: "", interest_level: "MEDIUM", notes: "" });
+    } catch { toast.error("Failed to add interest"); }
+  };
+
+  const handleScheduleViewing = async () => {
+    if (!viewingForm.property_interest_id || !viewingForm.scheduled_at) {
+      toast.error("Fill all fields"); return;
+    }
+    const interest = interests?.find(i => i.id === viewingForm.property_interest_id);
+    if (!interest) { toast.error("Interest not found"); return; }
+    try {
+      await createViewing.mutateAsync({
+        property_interest_id: viewingForm.property_interest_id,
+        lead_id: interest.lead_id,
+        property_id: propertyId,
+        scheduled_at: viewingForm.scheduled_at,
+      });
+      toast.success("Viewing scheduled");
+      setScheduleViewingOpen(false);
+      setViewingForm({ property_interest_id: "", lead_id: "", scheduled_at: "" });
+    } catch { toast.error("Failed to schedule viewing"); }
+  };
+
+  const handleCompleteViewing = async (viewingId: string) => {
+    try {
+      await updateViewing.mutateAsync({ id: viewingId, status: "COMPLETED" });
+      toast.success("Viewing completed");
+    } catch { toast.error("Failed to update viewing"); }
+  };
+
+  const handleCancelViewing = async (viewingId: string) => {
+    try {
+      await updateViewing.mutateAsync({ id: viewingId, status: "CANCELLED" });
+      toast.success("Viewing cancelled");
+    } catch { toast.error("Failed to cancel viewing"); }
+  };
+
+  const interestLevelColor = (level: string) => {
+    const colors: Record<string, string> = {
+      LOW: "bg-gray-100 text-gray-700",
+      MEDIUM: "bg-yellow-100 text-yellow-700",
+      HIGH: "bg-orange-100 text-orange-700",
+      VERY_HIGH: "bg-red-100 text-red-700",
+    };
+    return colors[level] ?? "bg-gray-100 text-gray-700";
   };
 
   if (isLoading) {
@@ -313,13 +396,84 @@ export default function PropertyDetailPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="leads">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Related Leads</CardTitle></CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">No leads associated with this property.</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="leads" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Interested Leads</h3>
+            <Button size="sm" onClick={() => setAddInterestOpen(true)} disabled={createInterest.isPending}>
+              <Plus className="mr-2 h-4 w-4" /> Add Lead Interest
+            </Button>
+          </div>
+
+          {interestsLoading ? (
+            <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+          ) : !interests || interests.length === 0 ? (
+            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No leads interested in this property yet.</CardContent></Card>
+          ) : (
+            <div className="space-y-3">
+              {interests.map((interest) => {
+                const leadViewings = viewings?.filter(v => v.property_interest_id === interest.id) ?? [];
+                return (
+                  <Card key={interest.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <p className="font-medium">{interest.lead ? `${interest.lead.first_name} ${interest.lead.last_name}` : "Unknown Lead"}</p>
+                          <p className="text-xs text-muted-foreground">{interest.lead?.email ?? ""}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={interestLevelColor(interest.interest_level)}>{interest.interest_level}</Badge>
+                          <Badge variant="outline">{interest.status}</Badge>
+                          <Button variant="ghost" size="sm" onClick={() => deleteInterest.mutate(interest.id)} disabled={deleteInterest.isPending}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                      {interest.notes && <p className="text-xs text-muted-foreground mb-2">{interest.notes}</p>}
+                      {interest.budget_range_min && (
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Budget: {formatCurrency(interest.budget_range_min)} - {formatCurrency(interest.budget_range_max ?? 0)}
+                        </p>
+                      )}
+                      <div className="border-t pt-3 mt-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium">Viewings ({leadViewings.length})</span>
+                          <Button variant="outline" size="sm" onClick={() => { setSelectedInterestId(interest.id); setViewingForm(p => ({ ...p, property_interest_id: interest.id, lead_id: interest.lead_id })); setScheduleViewingOpen(true); }}>
+                            <Calendar className="mr-2 h-3 w-3" /> Schedule
+                          </Button>
+                        </div>
+                        {leadViewings.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">No viewings scheduled</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {leadViewings.map((viewing) => (
+                              <div key={viewing.id} className="flex items-center justify-between rounded border p-2">
+                                <div>
+                                  <p className="text-xs">{formatDate(viewing.scheduled_at)}</p>
+                                  <Badge variant="outline" className="text-[10px]">{viewing.status}</Badge>
+                                </div>
+                                <div className="flex gap-1">
+                                  {viewing.status === "SCHEDULED" && (
+                                    <>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCompleteViewing(viewing.id)} title="Mark completed">
+                                        <CheckCircle className="h-3 w-3 text-green-600" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCancelViewing(viewing.id)} title="Cancel">
+                                        <XCircle className="h-3 w-3 text-destructive" />
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="tasks">
@@ -350,6 +504,97 @@ export default function PropertyDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={addInterestOpen} onOpenChange={setAddInterestOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Lead Interest</DialogTitle>
+            <DialogDescription>Link a lead to this property.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Lead</label>
+              <Select value={interestForm.lead_id} onValueChange={(v) => setInterestForm(p => ({ ...p, lead_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select lead..." /></SelectTrigger>
+                <SelectContent>
+                  {leadsLoading ? (
+                    <SelectItem value="" disabled>Loading...</SelectItem>
+                  ) : (
+                    allLeads?.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>{l.first_name} {l.last_name} ({l.email})</SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Interest Level</label>
+              <Select value={interestForm.interest_level} onValueChange={(v) => setInterestForm(p => ({ ...p, interest_level: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LOW">Low</SelectItem>
+                  <SelectItem value="MEDIUM">Medium</SelectItem>
+                  <SelectItem value="HIGH">High</SelectItem>
+                  <SelectItem value="VERY_HIGH">Very High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Notes</label>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder="Optional notes..."
+                value={interestForm.notes}
+                onChange={(e) => setInterestForm(p => ({ ...p, notes: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddInterestOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddInterest} disabled={createInterest.isPending}>Add Interest</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={scheduleViewingOpen} onOpenChange={setScheduleViewingOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Viewing</DialogTitle>
+            <DialogDescription>Schedule a property visit for this lead.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Interest</label>
+              <Select value={viewingForm.property_interest_id} onValueChange={(v) => {
+                const interest = interests?.find(i => i.id === v);
+                setViewingForm(p => ({ ...p, property_interest_id: v, lead_id: interest?.lead_id ?? "" }));
+              }}>
+                <SelectTrigger><SelectValue placeholder="Select interest..." /></SelectTrigger>
+                <SelectContent>
+                  {interests?.map((i) => (
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.lead ? `${i.lead.first_name} ${i.lead.last_name}` : "Unknown"} - {i.interest_level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Date & Time</label>
+              <input
+                type="datetime-local"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={viewingForm.scheduled_at}
+                onChange={(e) => setViewingForm(p => ({ ...p, scheduled_at: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setScheduleViewingOpen(false)}>Cancel</Button>
+            <Button onClick={handleScheduleViewing} disabled={createViewing.isPending}>Schedule</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>

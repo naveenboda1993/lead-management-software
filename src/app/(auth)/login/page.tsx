@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +26,6 @@ export default function LoginPage() {
   const redirect = searchParams.get("redirect") || "/dashboard";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
   const {
     register,
@@ -41,12 +39,19 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error: signInError } = await supabase.auth.signInWithPassword(data);
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
 
-    if (signInError) {
+    const result = await res.json();
+
+    if (!res.ok || !result.success) {
       setLoading(false);
-      setError(signInError.message);
-      toast.error(signInError.message);
+      const msg = result.error || "Invalid credentials";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 

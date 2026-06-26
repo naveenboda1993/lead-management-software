@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Users,
   UserPlus,
@@ -12,7 +13,8 @@ import {
 } from "lucide-react";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { useLeads } from "@/hooks/use-leads";
-import { LeadStatus } from "@/types";
+import { LeadStatus, type User } from "@/types";
+import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/utils/format";
 import { KpiCard } from "@/components/charts/kpi-card";
 import { LeadsBySourceChart } from "@/components/charts/leads-by-source-chart";
@@ -32,6 +34,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS } from "@/lib/constants";
 import { formatRelativeTime } from "@/lib/utils/format";
+
+const supabase = createClient();
 
 export default function DashboardPage() {
   const { data: metrics, isLoading, error } = useDashboard();
@@ -65,6 +69,68 @@ export default function DashboardPage() {
       ) ?? 0,
     [allLeads]
   );
+
+  const { data: profiles } = useQuery({
+    queryKey: ["profiles"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("id,name");
+      return (data ?? []) as Pick<User, "id" | "name">[];
+    },
+  });
+
+  const profileMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (profiles) {
+      for (const p of profiles) {
+        map.set(p.id, p.name);
+      }
+    }
+    return map;
+  }, [profiles]);
+
+  const monthlyConversions = useMemo(() => {
+    if (!allLeads) return [];
+    const monthly = new Map<string, { won: number; lost: number }>();
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.toLocaleString("en-US", { month: "short", year: "numeric" });
+      monthly.set(key, { won: 0, lost: 0 });
+    }
+    for (const lead of allLeads) {
+      const d = new Date(lead.created_at);
+      const key = d.toLocaleString("en-US", { month: "short", year: "numeric" });
+      const entry = monthly.get(key);
+      if (entry) {
+        if (lead.status === LeadStatus.WON) entry.won++;
+        else if (lead.status === LeadStatus.LOST) entry.lost++;
+      }
+    }
+    return Array.from(monthly.entries()).map(([month, data]) => ({
+      month,
+      won: data.won,
+      lost: data.lost,
+    }));
+  }, [allLeads]);
+
+  const teamPerformance = useMemo(() => {
+    if (!allLeads) return [];
+    const grouped = new Map<string, { leads: number; won: number }>();
+    for (const lead of allLeads) {
+      const assignee = lead.assigned_to ?? "unassigned";
+      if (!grouped.has(assignee)) {
+        grouped.set(assignee, { leads: 0, won: 0 });
+      }
+      const entry = grouped.get(assignee)!;
+      entry.leads++;
+      if (lead.status === LeadStatus.WON) entry.won++;
+    }
+    return Array.from(grouped.entries()).map(([id, data]) => ({
+      name: id === "unassigned" ? "Unassigned" : (profileMap.get(id) ?? "Unknown"),
+      leads: data.leads,
+      won: data.won,
+    }));
+  }, [allLeads, profileMap]);
 
   if (error) {
     return (
@@ -135,7 +201,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <MonthlyConversionsChart
-          data={[]}
+          data={monthlyConversions}
           loading={isLoading}
         />
         <SalesFunnelChart
@@ -146,7 +212,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <TeamPerformanceChart
-          data={[]}
+          data={teamPerformance}
           loading={isLoading}
         />
         <Card>

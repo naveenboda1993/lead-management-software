@@ -318,6 +318,36 @@ export interface Commission {
   updated_at: string;
 }
 
+export interface PropertyInterest {
+  id: string;
+  lead_id: string;
+  property_id: string;
+  interest_level: "LOW" | "MEDIUM" | "HIGH" | "VERY_HIGH";
+  status: "INTERESTED" | "NEGOTIATING" | "BOOKED" | "LOST" | "NOT_INTERESTED";
+  notes?: string | null;
+  budget_range_min?: number | null;
+  budget_range_max?: number | null;
+  desired_move_in_date?: string | null;
+  organization_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PropertyViewing {
+  id: string;
+  property_interest_id: string;
+  lead_id: string;
+  property_id: string;
+  scheduled_at: string;
+  status: "SCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
+  feedback?: string | null;
+  rating?: number | null;
+  conducted_by?: string | null;
+  organization_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Ticket {
   id: string;
   title: string;
