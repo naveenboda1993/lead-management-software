@@ -29,9 +29,15 @@ async function fetchBroker(id: string): Promise<Broker | null> {
 }
 
 async function createBroker(input: Partial<Broker>): Promise<Broker> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+
   const { data, error } = await supabase
     .from("brokers")
-    .insert([input])
+    .insert([{ ...input, organization_id: profile?.organization_id }])
     .select()
     .single();
   if (error) throw new Error(error.message);

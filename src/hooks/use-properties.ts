@@ -53,9 +53,15 @@ async function fetchProperty(id: string): Promise<Property | null> {
 }
 
 async function createProperty(input: Partial<Property>): Promise<Property> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+
   const { data, error } = await supabase
     .from("properties")
-    .insert([input])
+    .insert([{ ...input, organization_id: profile?.organization_id }])
     .select()
     .single();
   if (error) throw new Error(error.message);
