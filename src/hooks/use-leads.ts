@@ -128,11 +128,15 @@ async function fetchLeadActivities(leadId: string): Promise<Activity[]> {
     .eq("lead_id", leadId)
     .order("created_at", { ascending: false });
 
-  return ((data ?? []) as any[]).map((item) => ({
-    ...item,
-    profiles: undefined,
-    created_by: item.profiles?.full_name ?? item.created_by,
-  })) as Activity[];
+  return ((data ?? []) as unknown[]).map((item) => {
+    const row = item as Record<string, unknown>;
+    const profile = row.profiles as Record<string, unknown> | undefined;
+    return {
+      ...row,
+      profiles: undefined,
+      created_by: profile?.full_name ?? row.created_by,
+    } as Activity;
+  });
 }
 
 export function useLeads(filters?: LeadFilters) {
