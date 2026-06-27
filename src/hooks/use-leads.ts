@@ -72,6 +72,12 @@ async function createLead(input: CreateLeadInput): Promise<Lead> {
 }
 
 async function updateLead({ id, ...input }: UpdateLeadInput & { id: string }): Promise<Lead> {
+  const { data: oldLead } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("id", id)
+    .single();
+
   const { data, error } = await supabase
     .from("leads")
     .update(input)
@@ -80,6 +86,33 @@ async function updateLead({ id, ...input }: UpdateLeadInput & { id: string }): P
     .single();
 
   if (error) throw new Error(error.message);
+
+  if (oldLead) {
+    const trackedFields = ["first_name", "last_name", "email", "mobile", "company", "job_title", "industry", "notes", "estimated_deal_value", "priority", "lead_source", "tags"];
+    const changedFields = trackedFields.filter((f) => {
+      const oldVal = JSON.stringify((oldLead as Record<string, unknown>)[f]);
+      const newVal = JSON.stringify((input as Record<string, unknown>)[f]);
+      return oldVal !== newVal;
+    });
+
+    if (changedFields.length > 0) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const description = `Updated ${changedFields.map((f) => f.replace(/_/g, " ")).join(", ")}`;
+        await supabase.from("activities").insert({
+          lead_id: id,
+          type: "lead_updated",
+          description,
+          created_by: user.id,
+          organization_id: (oldLead as Record<string, unknown>).organization_id,
+          metadata: { changed_fields: changedFields },
+        });
+      }
+    }
+  }
+
   return data as Lead;
 }
 
@@ -91,11 +124,15 @@ async function deleteLead(id: string): Promise<void> {
 async function fetchLeadActivities(leadId: string): Promise<Activity[]> {
   const { data } = await supabase
     .from("activities")
-    .select("*")
+    .select("*, profiles:created_by(full_name)")
     .eq("lead_id", leadId)
     .order("created_at", { ascending: false });
 
-  return (data ?? []) as Activity[];
+  return ((data ?? []) as any[]).map((item) => ({
+    ...item,
+    profiles: undefined,
+    created_by: item.profiles?.full_name ?? item.created_by,
+  })) as Activity[];
 }
 
 export function useLeads(filters?: LeadFilters) {
@@ -132,6 +169,7 @@ export function useUpdateLead() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["lead", data.id] });
+      queryClient.invalidateQueries({ queryKey: ["lead-activities", data.id] });
     },
   });
 }
