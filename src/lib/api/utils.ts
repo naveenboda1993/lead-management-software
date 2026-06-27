@@ -32,6 +32,7 @@ export async function logAuditEvent(
     entity_type: string;
     entity_id: string;
     user_id: string;
+    organization_id: string;
     changes?: Record<string, unknown> | null;
     ip_address?: string | null;
   }
@@ -41,6 +42,7 @@ export async function logAuditEvent(
     entity_type: params.entity_type,
     entity_id: params.entity_id,
     user_id: params.user_id,
+    organization_id: params.organization_id,
     changes: params.changes ?? null,
     ip_address: params.ip_address ?? null,
   });

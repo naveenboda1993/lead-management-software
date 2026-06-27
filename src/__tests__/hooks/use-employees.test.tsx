@@ -3,31 +3,29 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
-const { mockSelect, mockEq, mockOrder, mockSingle, mockFrom } = vi.hoisted(() => {
+const { mockSelect, mockEq, mockOrder, mockSingle, mockFrom, mockAuthGetUser } = vi.hoisted(() => {
   const mockSelect = vi.fn();
   const mockEq = vi.fn();
   const mockOrder = vi.fn();
   const mockSingle = vi.fn();
+  const mockAuthGetUser = vi.fn(() =>
+    Promise.resolve({ data: { user: { id: "user-1" } }, error: null })
+  );
   const mockFrom = vi.fn(() => ({
     select: mockSelect,
     order: mockOrder,
     eq: mockEq,
     single: mockSingle,
   }));
-  return { mockSelect, mockEq, mockOrder, mockSingle, mockFrom };
+  return { mockSelect, mockEq, mockOrder, mockSingle, mockFrom, mockAuthGetUser };
 });
 
-vi.mock("@/lib/supabase/client", () => {
-  const mockAuthGetUser = vi.fn(() =>
-    Promise.resolve({ data: { user: { id: "user-1" } }, error: null })
-  );
-  return {
-    createClient: () => ({
-      from: mockFrom,
-      auth: { getUser: mockAuthGetUser },
-    }),
-  };
-});
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    from: mockFrom,
+    auth: { getUser: mockAuthGetUser },
+  }),
+}));
 
 vi.mock("@/lib/utils/cn", () => ({
   cn: (...inputs: unknown[]) => inputs.filter(Boolean).join(" "),
@@ -57,21 +55,50 @@ function createWrapper() {
   );
 }
 
+function createQuery(data: unknown) {
+  const promise = Promise.resolve(data);
+  return Object.assign(promise, {
+    eq: vi.fn(() => promise),
+    or: vi.fn(() => promise),
+    ilike: vi.fn(() => promise),
+    order: vi.fn(() => promise),
+    select: vi.fn(() => promise),
+    single: vi.fn(() => promise),
+  });
+}
+
 describe("useEmployees", () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuthGetUser.mockResolvedValue({ data: { user: { id: "user-1" } }, error: null });
+    mockFrom.mockReset();
+    mockFrom.mockImplementation(() => ({
+      select: mockSelect,
+      order: mockOrder,
+      eq: mockEq,
+      single: mockSingle,
+    }));
+    mockSelect.mockReset();
+    mockEq.mockReset();
+    mockSingle.mockReset();
+    mockOrder.mockReset();
+    mockEq.mockReturnValue({ single: mockSingle });
+    mockSingle.mockResolvedValue({ data: { organization_id: "org-1" }, error: null });
+    mockSelect
+      .mockReturnValueOnce({ eq: mockEq })
+      .mockReturnValue({ order: mockOrder });
+  });
 
   it("returns employees on success", async () => {
-    mockSelect.mockReturnValue({ order: mockOrder });
-    mockOrder.mockResolvedValue({ data: [sampleEmployee], error: null });
+    mockOrder.mockReturnValue(createQuery({ data: [sampleEmployee], error: null }));
     const { result } = renderHook(() => useEmployees(), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(1);
-    expect(result.current.data![0].full_name).toBe("Jane Doe");
+    expect(result.current.data![0].name).toBe("Jane Doe");
   });
 
   it("returns empty array when no data", async () => {
-    mockSelect.mockReturnValue({ order: mockOrder });
-    mockOrder.mockResolvedValue({ data: null, error: null });
+    mockOrder.mockReturnValue(createQuery({ data: null, error: null }));
     const { result } = renderHook(() => useEmployees(), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([]);
@@ -87,7 +114,7 @@ describe("useEmployee", () => {
     mockSingle.mockResolvedValue({ data: sampleEmployee, error: null });
     const { result } = renderHook(() => useEmployee("emp-1"), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.full_name).toBe("Jane Doe");
+    expect(result.current.data?.name).toBe("Jane Doe");
   });
 
   it("is disabled when id is undefined", () => {

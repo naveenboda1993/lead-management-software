@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
           entity_type: "auth",
           entity_id: user.id,
           user_id: user.id,
+          organization_id: profile.organization_id,
           changes: clientInfo as unknown as Record<string, unknown>,
           ip_address: clientInfo.ip,
         });

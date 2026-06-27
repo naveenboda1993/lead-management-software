@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
         entity_type: "auth",
         entity_id: userId,
         user_id: userId,
+        organization_id: org.id,
         changes: clientInfo as unknown as Record<string, unknown>,
         ip_address: clientInfo.ip,
       });
@@ -103,6 +104,7 @@ export async function POST(request: NextRequest) {
       entity_type: "auth",
       entity_id: userId,
       user_id: userId,
+      organization_id: org.id,
       changes: clientInfo as unknown as Record<string, unknown>,
       ip_address: clientInfo.ip,
     });

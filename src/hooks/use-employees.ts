@@ -21,8 +21,20 @@ export interface EmployeeFilters {
   role?: string;
 }
 
+function mapProfileToUser(profile: Record<string, unknown>): User {
+  return {
+    ...profile,
+    name: profile.full_name as string,
+  } as User;
+}
+
 async function fetchEmployees(filters?: EmployeeFilters): Promise<User[]> {
+  const orgId = await getOrgId();
   let query = supabase.from("profiles").select("*").order("full_name", { ascending: true });
+
+  if (orgId) {
+    query = query.eq("organization_id", orgId);
+  }
 
   if (filters?.search) {
     query = query.or(
@@ -34,12 +46,13 @@ async function fetchEmployees(filters?: EmployeeFilters): Promise<User[]> {
   }
 
   const { data } = await query;
-  return (data ?? []) as User[];
+  return ((data ?? []) as Record<string, unknown>[]).map(mapProfileToUser);
 }
 
 async function fetchEmployee(id: string): Promise<User | null> {
   const { data } = await supabase.from("profiles").select("*").eq("id", id).single();
-  return data as User | null;
+  if (!data) return null;
+  return mapProfileToUser(data as Record<string, unknown>);
 }
 
 async function fetchAttendance(filters?: { employee_id?: string; date_from?: string; date_to?: string }): Promise<Attendance[]> {
