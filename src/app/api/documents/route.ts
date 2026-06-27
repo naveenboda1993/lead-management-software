@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
         file_size: parsed.data.file_size,
         file_type: parsed.data.file_type,
         lead_id: parsed.data.lead_id ?? null,
+        organization_id: orgId,
         uploaded_by: user.id,
       })
       .select()
@@ -109,6 +110,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("documents")
       .select("*")
+      .eq("organization_id", orgId)
       .order("created_at", { ascending: false });
 
     if (leadId) {

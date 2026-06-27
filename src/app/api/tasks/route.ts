@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("tasks")
-      .select("*, leads!inner(organization_id)", { count: "exact" });
+      .select("*", { count: "exact" })
+      .eq("organization_id", orgId);
 
     if (status) {
       const statuses = status.split(",");
@@ -68,14 +69,7 @@ export async function GET(request: NextRequest) {
 
     if (error) return serverError(error);
 
-    const filteredData = Array.isArray(data)
-      ? data.filter((t: Record<string, unknown>) => {
-          const lead = t.leads as Record<string, unknown> | undefined;
-          return lead?.organization_id === orgId;
-        })
-      : [];
-
-    return paginatedResponse(filteredData, count ?? 0, page, limit);
+    return paginatedResponse(data ?? [], count ?? 0, page, limit);
   } catch (error) {
     return serverError(error);
   }

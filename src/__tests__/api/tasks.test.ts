@@ -80,22 +80,23 @@ describe("Tasks API - GET", () => {
   it("returns paginated tasks", async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn(() => ({
-        order: vi.fn(() => ({
-          range: vi.fn(() =>
-            Promise.resolve({
-              data: [
-                {
-                  id: UUID1,
-                  title: "Follow up",
-                  task_type: "call",
-                  status: "pending",
-                  leads: { organization_id: "org-1" },
-                },
-              ],
-              count: 1,
-              error: null,
-            })
-          ),
+        eq: vi.fn(() => ({
+          order: vi.fn(() => ({
+            range: vi.fn(() =>
+              Promise.resolve({
+                data: [
+                  {
+                    id: UUID1,
+                    title: "Follow up",
+                    task_type: "call",
+                    status: "pending",
+                  },
+                ],
+                count: 1,
+                error: null,
+              })
+            ),
+          })),
         })),
       })),
     });
@@ -113,11 +114,13 @@ describe("Tasks API - GET", () => {
   it("handles status filter", async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn(() => ({
-        in: vi.fn(() => ({
-          order: vi.fn(() => ({
-            range: vi.fn(() =>
-              Promise.resolve({ data: [], count: 0, error: null })
-            ),
+        eq: vi.fn(() => ({
+          in: vi.fn(() => ({
+            order: vi.fn(() => ({
+              range: vi.fn(() =>
+                Promise.resolve({ data: [], count: 0, error: null })
+              ),
+            })),
           })),
         })),
       })),
@@ -132,11 +135,13 @@ describe("Tasks API - GET", () => {
   it("handles type filter", async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn(() => ({
-        in: vi.fn(() => ({
-          order: vi.fn(() => ({
-            range: vi.fn(() =>
-              Promise.resolve({ data: [], count: 0, error: null })
-            ),
+        eq: vi.fn(() => ({
+          in: vi.fn(() => ({
+            order: vi.fn(() => ({
+              range: vi.fn(() =>
+                Promise.resolve({ data: [], count: 0, error: null })
+              ),
+            })),
           })),
         })),
       })),
@@ -152,10 +157,12 @@ describe("Tasks API - GET", () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          order: vi.fn(() => ({
-            range: vi.fn(() =>
-              Promise.resolve({ data: [], count: 0, error: null })
-            ),
+          eq: vi.fn(() => ({
+            order: vi.fn(() => ({
+              range: vi.fn(() =>
+                Promise.resolve({ data: [], count: 0, error: null })
+              ),
+            })),
           })),
         })),
       })),
@@ -171,10 +178,12 @@ describe("Tasks API - GET", () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          order: vi.fn(() => ({
-            range: vi.fn(() =>
-              Promise.resolve({ data: [], count: 0, error: null })
-            ),
+          eq: vi.fn(() => ({
+            order: vi.fn(() => ({
+              range: vi.fn(() =>
+                Promise.resolve({ data: [], count: 0, error: null })
+              ),
+            })),
           })),
         })),
       })),
@@ -189,12 +198,14 @@ describe("Tasks API - GET", () => {
   it("handles due date filters", async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn(() => ({
-        lte: vi.fn(() => ({
-          gte: vi.fn(() => ({
-            order: vi.fn(() => ({
-              range: vi.fn(() =>
-                Promise.resolve({ data: [], count: 0, error: null })
-              ),
+        eq: vi.fn(() => ({
+          lte: vi.fn(() => ({
+            gte: vi.fn(() => ({
+              order: vi.fn(() => ({
+                range: vi.fn(() =>
+                  Promise.resolve({ data: [], count: 0, error: null })
+                ),
+              })),
             })),
           })),
         })),
@@ -210,10 +221,12 @@ describe("Tasks API - GET", () => {
   it("returns empty array when no data", async () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn(() => ({
-        order: vi.fn(() => ({
-          range: vi.fn(() =>
-            Promise.resolve({ data: [], count: 0, error: null })
-          ),
+        eq: vi.fn(() => ({
+          order: vi.fn(() => ({
+            range: vi.fn(() =>
+              Promise.resolve({ data: [], count: 0, error: null })
+            ),
+          })),
         })),
       })),
     });
