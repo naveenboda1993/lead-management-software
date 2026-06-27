@@ -129,12 +129,11 @@ async function fetchLeadActivities(leadId: string): Promise<Activity[]> {
     .order("created_at", { ascending: false });
 
   return ((data ?? []) as unknown[]).map((item) => {
-    const row = item as Record<string, unknown>;
-    const profile = row.profiles as Record<string, unknown> | undefined;
+    const row = item as Activity & { profiles?: { full_name: string } | null };
     return {
       ...row,
       profiles: undefined,
-      created_by: profile?.full_name ?? row.created_by,
+      created_by: row.profiles?.full_name ?? row.created_by,
     } as Activity;
   });
 }
