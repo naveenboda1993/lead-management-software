@@ -4,7 +4,6 @@ import {
   getAuthenticatedUser,
   getOrganizationId,
   logActivity,
-  logAuditEvent,
   successResponse,
   badRequest,
   notFound,
@@ -136,13 +135,6 @@ export async function DELETE(
         metadata: { task_id: id },
       });
     }
-
-    await logAuditEvent(supabase, {
-      action: "DELETE",
-      entity_type: "task",
-      entity_id: id,
-      user_id: user.id,
-    });
 
     return successResponse({ message: "Task deleted successfully" });
   } catch (error) {

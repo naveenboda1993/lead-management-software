@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -24,8 +24,9 @@ import { toast } from "@/components/ui/toast";
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const code = searchParams.get("code");
   const [loading, setLoading] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -36,28 +37,33 @@ function ResetPasswordForm() {
     resolver: zodResolver(resetPasswordSchema),
   });
 
+  const supabase = createClient();
+
+  useEffect(() => {
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error: exchangeError }) => {
+        if (exchangeError) {
+          setError(exchangeError.message);
+        } else {
+          setSessionReady(true);
+        }
+      });
+    }
+  }, [code, supabase]);
+
   const onSubmit = async (data: ResetPasswordInput) => {
-    if (!token) {
-      setError("Missing reset token. Please request a new password reset.");
+    if (!code) {
+      setError("Missing reset code. Please request a new password reset.");
+      return;
+    }
+
+    if (!sessionReady) {
+      setError("Session not ready. Please wait.");
       return;
     }
 
     setLoading(true);
     setError(null);
-
-    const supabase = createClient();
-    const { error: resetError } = await supabase.auth.verifyOtp({
-      email: "",
-      token,
-      type: "recovery",
-    });
-
-    if (resetError) {
-      setError(resetError.message);
-      toast.error(resetError.message);
-      setLoading(false);
-      return;
-    }
 
     const { error: updateError } = await supabase.auth.updateUser({
       password: data.password,
@@ -71,6 +77,7 @@ function ResetPasswordForm() {
       return;
     }
 
+    await supabase.auth.signOut();
     toast.success("Password reset successfully!");
     router.push("/login");
   };
@@ -85,9 +92,14 @@ function ResetPasswordForm() {
         <CardDescription>Enter your new password below</CardDescription>
       </CardHeader>
       <CardContent>
-        {!token ? (
+        {!code ? (
           <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive text-center">
-            Invalid or missing reset token. Please request a new password reset.
+            Invalid or missing reset code. Please request a new password reset.
+          </div>
+        ) : !sessionReady && !error ? (
+          <div className="text-center text-muted-foreground py-8">
+            <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+            <p className="mt-2">Verifying your reset link...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-const publicRoutes = ["/login", "/register", "/forgot-password"];
+const publicRoutes = ["/login", "/register", "/forgot-password", "/reset-password"];
 
 const roleRouteMap: Record<string, string[]> = {
   "/admin": ["SUPER_ADMIN", "ADMIN"],

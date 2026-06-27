@@ -34,6 +34,7 @@ describe("registerSchema", () => {
     email: "john@example.com",
     password: "password123",
     confirmPassword: "password123",
+    organization_name: "Acme Corp",
   };
 
   it("accepts valid registration", () => {

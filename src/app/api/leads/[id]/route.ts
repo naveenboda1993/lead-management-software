@@ -4,7 +4,6 @@ import {
   getAuthenticatedUser,
   getOrganizationId,
   logActivity,
-  logAuditEvent,
   successResponse,
   badRequest,
   notFound,
@@ -109,26 +108,6 @@ export async function PATCH(
       });
     }
 
-    const changes: Record<string, { from: unknown; to: unknown }> = {};
-    for (const [key, value] of Object.entries(updates)) {
-      if (key in existing && existing[key as keyof typeof existing] !== value) {
-        changes[key] = {
-          from: existing[key as keyof typeof existing],
-          to: value,
-        };
-      }
-    }
-
-    if (Object.keys(changes).length > 0) {
-      await logAuditEvent(supabase, {
-        action: "UPDATE",
-        entity_type: "lead",
-        entity_id: id,
-        user_id: user.id,
-        changes,
-      });
-    }
-
     return successResponse(updated);
   } catch (error) {
     return serverError(error);
@@ -175,13 +154,6 @@ export async function DELETE(
       .eq("organization_id", orgId);
 
     if (error) return serverError(error);
-
-    await logAuditEvent(supabase, {
-      action: "DELETE",
-      entity_type: "lead",
-      entity_id: id,
-      user_id: user.id,
-    });
 
     return successResponse({ message: "Lead deleted successfully" });
   } catch (error) {

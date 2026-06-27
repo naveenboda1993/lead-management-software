@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import {
   getAuthenticatedUser,
   getOrganizationId,
-  logAuditEvent,
   successResponse,
   notFound,
   serverError,
@@ -91,13 +90,6 @@ export async function DELETE(
       .eq("id", id);
 
     if (deleteError) return serverError(deleteError);
-
-    await logAuditEvent(supabase, {
-      action: "DELETE",
-      entity_type: "document",
-      entity_id: id,
-      user_id: user.id,
-    });
 
     return successResponse({ message: "Document deleted successfully" });
   } catch (error) {
