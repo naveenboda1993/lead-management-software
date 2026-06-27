@@ -129,6 +129,96 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## PWA (Progressive Web App)
+
+The app includes a fully configured PWA for mobile install:
+
+- **Service Worker:** `public/sw.js` — caches pages, handles push notifications, offline fallback
+- **Manifest:** `src/app/manifest.ts` — app name, icons, standalone display
+- **Registration:** Auto-registered via `PWARegister` component in root layout
+
+### Test PWA
+
+1. Run the app: `npm run dev`
+2. Open in Chrome on Android or Safari on iOS
+3. You should see an "Add to Home Screen" prompt (or find it in the browser menu)
+4. The app opens in standalone mode (no browser chrome)
+
+### PWA Configuration
+
+| File | Purpose |
+|------|---------|
+| `public/sw.js` | Service worker (cache-first for pages, network-first for API) |
+| `src/app/manifest.ts` | Web app manifest (name, icons, display) |
+| `src/components/pwa-register.tsx` | Client component to register the service worker |
+| `public/icons/icon.svg` | App icon (512×512 SVG) |
+
+## Capacitor (Native Android & iOS)
+
+Capacitor wraps the web app in a native WebView for App Store / Play Store deployment.
+
+### Prerequisites
+
+- **Android:** Android Studio with Android SDK (API 34+)
+- **iOS:** macOS with Xcode 16+
+
+### Setup (One-Time)
+
+```bash
+# Install dependencies (already done)
+npm install
+
+# Build the Next.js app
+npm run build
+
+# Sync Capacitor with the built app
+npx cap sync
+
+# Add platforms
+npx cap add android
+npx cap add ios    # macOS only
+```
+
+### Development (Live Reload on Device)
+
+```bash
+# Start Next.js dev server
+npm run dev
+
+# In another terminal, run Capacitor pointing to dev server
+npx cap run android
+# or
+npx cap run ios
+```
+
+### Production Build
+
+```bash
+# Build APK
+npm run cap:build:android
+
+# Build IPA (macOS only)
+npm run cap:build:ios
+```
+
+### Configuration
+
+| File | Purpose |
+|------|---------|
+| `capacitor.config.ts` | Capacitor config (app ID `com.leadcrm.app`, name, web dir) |
+| `android/` | Android project (generated, gitignored) |
+| `ios/` | iOS project (generated, gitignored) |
+
+### Available Scripts
+
+```bash
+npm run cap:sync            # Sync web code to native projects
+npm run cap:android         # Open in Android Studio
+npm run cap:ios             # Open in Xcode (macOS only)
+npm run cap:build:android   # Full build: next build → sync → assemble APK
+npm run cap:build:ios       # Full build: next build → sync → xcodebuild (macOS only)
+```
+
 ## Docker Deployment
 
 ```bash

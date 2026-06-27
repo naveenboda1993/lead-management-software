@@ -26,4 +26,11 @@ Visit [http://localhost:3000](http://localhost:3000).
 - **Styling:** Tailwind CSS v4, ShadCN UI
 - **Database:** Supabase (PostgreSQL, Auth, Storage, Realtime)
 - **AI:** LangGraph, OpenAI / OpenRouter
-- **Deployment:** Vercel
+- **Deployment:** Vercel, Docker, PWA, Capacitor (Android / iOS)
+
+## PWA & Mobile
+
+- **PWA** — Installable on mobile home screen with offline caching and push notifications
+- **Capacitor** — Native Android APK and iOS IPA builds for App Store / Play Store distribution
+
+See [docs/setup.md](./docs/setup.md) for PWA and Capacitor setup instructions.
