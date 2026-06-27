@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Plus, Loader2, Check, X } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "@/hooks/use-tasks";
@@ -54,17 +54,23 @@ export default function TasksPage() {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [users, setUsers] = useState<{ id: string; label: string }[]>([]);
   const [, setUsersLoading] = useState(false);
+  const [profileMap, setProfileMap] = useState<Record<string, string>>({});
 
   const loadUsers = useCallback(async () => {
     if (users.length > 0) return;
     setUsersLoading(true);
     const supabase = createClient();
-    const { data } = await supabase.from("users").select("id, name");
+    const { data } = await supabase.from("profiles").select("id, full_name");
     if (data) {
-      setUsers(data.map((u: { id: string; name: string }) => ({ id: u.id, label: u.name })));
+      setUsers(data.map((u: { id: string; full_name: string }) => ({ id: u.id, label: u.full_name })));
+      const map: Record<string, string> = {};
+      data.forEach((u: { id: string; full_name: string }) => { map[u.id] = u.full_name; });
+      setProfileMap(map);
     }
     setUsersLoading(false);
   }, [users.length]);
+
+  useEffect(() => { loadUsers(); }, [loadUsers]);
 
   const filteredTasks = useMemo(() => {
     if (!tasks) return [];
@@ -234,7 +240,9 @@ export default function TasksPage() {
         header: "Assigned To",
         cell: ({ row }) => (
           <span className="text-sm">
-            {row.original.assigned_to ?? "-"}
+            {row.original.assigned_to
+              ? (profileMap[row.original.assigned_to] ?? row.original.assigned_to.slice(0, 8) + "...")
+              : "-"}
           </span>
         ),
       },
@@ -314,7 +322,7 @@ export default function TasksPage() {
         },
       },
     ],
-    [leads, loadUsers, handleCancel, handleComplete, handleDelete]
+    [leads, loadUsers, handleCancel, handleComplete, handleDelete, profileMap]
   );
 
   if (error) {

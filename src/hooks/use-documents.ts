@@ -41,6 +41,12 @@ async function uploadDocument(input: DocumentUploadInput & { file: File }): Prom
 
   if (uploadError) throw new Error(uploadError.message);
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+
   const { data, error } = await supabase
     .from("documents")
     .insert([
@@ -50,6 +56,7 @@ async function uploadDocument(input: DocumentUploadInput & { file: File }): Prom
         file_size: input.file.size,
         file_type: input.file.type || fileExt || "unknown",
         lead_id: input.lead_id ?? null,
+        organization_id: profile?.organization_id,
       },
     ])
     .select()

@@ -6,6 +6,15 @@ import type { Order, Coupon } from "@/types";
 
 const supabase = createClient();
 
+async function getOrgId() {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+  return profile?.organization_id;
+}
+
 export interface OrderFilters {
   search?: string;
   status?: string[];
@@ -51,7 +60,7 @@ async function fetchOrder(id: string): Promise<Order | null> {
 async function createOrder(input: Partial<Order>): Promise<Order> {
   const { data, error } = await supabase
     .from("orders")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);
@@ -82,7 +91,7 @@ async function fetchCoupons(): Promise<Coupon[]> {
 async function createCoupon(input: Partial<Coupon>): Promise<Coupon> {
   const { data, error } = await supabase
     .from("coupons")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);

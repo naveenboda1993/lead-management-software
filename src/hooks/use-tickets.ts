@@ -6,6 +6,15 @@ import type { Ticket, TicketMessage } from "@/types";
 
 const supabase = createClient();
 
+async function getOrgId() {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+  return profile?.organization_id;
+}
+
 export interface TicketFilters {
   search?: string;
   status?: string[];
@@ -63,7 +72,7 @@ async function fetchTicket(id: string): Promise<Ticket | null> {
 async function createTicket(input: Partial<Ticket>): Promise<Ticket> {
   const { data, error } = await supabase
     .from("tickets")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);

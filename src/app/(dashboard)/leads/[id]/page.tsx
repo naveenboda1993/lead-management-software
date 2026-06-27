@@ -16,12 +16,13 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { useLead, useUpdateLead, useDeleteLead, useLeadActivities } from "@/hooks/use-leads";
-import { useTasks } from "@/hooks/use-tasks";
-import { useDocuments } from "@/hooks/use-documents";
+import { useTasks, useCreateTask } from "@/hooks/use-tasks";
+import { useDocuments, useUploadDocument, useDeleteDocument } from "@/hooks/use-documents";
 import { usePropertyInterestsByLead, useCreatePropertyInterest, useDeletePropertyInterest } from "@/hooks/use-property-interests";
 import { useViewingsByLead, useCreatePropertyViewing, useUpdatePropertyViewing } from "@/hooks/use-property-viewings";
 import { useProperties } from "@/hooks/use-properties";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -66,6 +67,7 @@ import {
 } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { createLeadSchema } from "@/lib/validations/lead";
+import { TaskType, TaskStatus } from "@/types";
 import { z } from "zod";
 
 type CreateLeadInput = z.infer<typeof createLeadSchema>;
@@ -88,6 +90,12 @@ export default function LeadDetailPage() {
   const createPropertyViewing = useCreatePropertyViewing();
   const updatePropertyViewing = useUpdatePropertyViewing();
   const { data: allProperties, isLoading: allPropertiesLoading } = useProperties();
+  const createTask = useCreateTask();
+  const uploadDocument = useUploadDocument();
+  const deleteDocument = useDeleteDocument();
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadName, setUploadName] = useState("");
 
   const [editing, setEditing] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -102,6 +110,10 @@ export default function LeadDetailPage() {
   const [followUpLoading, setFollowUpLoading] = useState(false);
   const [followUpResult, setFollowUpResult] = useState<{ channel: string; message?: string; tone?: string; timing?: string } | null>(null);
   const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [scoreLoading, setScoreLoading] = useState(false);
+  const [scoreResult, setScoreResult] = useState<{ score: number; conversion_probability: string; recommendation: string; reasoning: string } | null>(null);
+  const [scoreOpen, setScoreOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const handleUpdate = async (data: CreateLeadInput) => {
     try {
@@ -177,6 +189,17 @@ export default function LeadDetailPage() {
   const handleCancelViewing = async (viewingId: string) => {
     try { await updatePropertyViewing.mutateAsync({ id: viewingId, status: "CANCELLED" }); toast.success("Viewing cancelled"); }
     catch { toast.error("Failed to cancel viewing"); }
+  };
+
+  const handleUploadDocument = async () => {
+    if (!uploadFile) { toast.error("Select a file"); return; }
+    try {
+      await uploadDocument.mutateAsync({ file: uploadFile, name: uploadName || uploadFile.name, lead_id: leadId });
+      toast.success("Document uploaded");
+      setUploadOpen(false);
+      setUploadFile(null);
+      setUploadName("");
+    } catch { toast.error("Failed to upload document"); }
   };
 
   const interestLevelColor = (level: string) => {
@@ -280,8 +303,26 @@ export default function LeadDetailPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
-                onClick={() => {
-                  toast.success("Lead scored: 85/100");
+                onClick={async () => {
+                  setScoreLoading(true);
+                  try {
+                    const res = await fetch("/api/ai/lead-scoring", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ lead_id: leadId }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      setScoreResult(data.data);
+                      setScoreOpen(true);
+                    } else {
+                      toast.error(data.error || "Failed to score lead");
+                    }
+                  } catch {
+                    toast.error("Failed to score lead");
+                  } finally {
+                    setScoreLoading(false);
+                  }
                 }}
               >
                 Score Lead
@@ -299,6 +340,17 @@ export default function LeadDetailPage() {
                     if (data.success) {
                       setFollowUpResult(data.data);
                       setFollowUpOpen(true);
+                      const message = data.data.message ?? data.data.messages?.followUpMessage ?? "";
+                      await createTask.mutateAsync({
+                        title: `Follow-up: ${lead?.first_name} ${lead?.last_name}`,
+                        description: message || "Follow-up generated",
+                        lead_id: leadId,
+                        task_type: TaskType.FOLLOW_UP,
+                        status: TaskStatus.PENDING,
+                        due_date: null,
+                        assigned_to: null,
+                        reminder_at: null,
+                      });
                     } else {
                       toast.error(data.error || "Failed to generate follow-up");
                     }
@@ -313,7 +365,7 @@ export default function LeadDetailPage() {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
-                  toast.success("AI summary generated");
+                  setSummaryOpen(true);
                 }}
               >
                 Summarize Lead
@@ -583,8 +635,12 @@ export default function LeadDetailPage() {
 
         <TabsContent value="documents">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Documents</CardTitle>
+              <Button size="sm" onClick={() => setUploadOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Upload
+              </Button>
             </CardHeader>
             <CardContent>
               {documentsLoading ? (
@@ -892,6 +948,109 @@ export default function LeadDetailPage() {
           ) : null}
           <DialogFooter>
             <Button onClick={() => setFollowUpOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={scoreOpen} onOpenChange={setScoreOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Lead Score</DialogTitle>
+            <DialogDescription>
+              AI-powered lead scoring for {lead?.first_name} {lead?.last_name}
+            </DialogDescription>
+          </DialogHeader>
+          {scoreLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : scoreResult ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="text-4xl font-bold">{scoreResult.score}<span className="text-lg text-muted-foreground">/100</span></div>
+                <div className="space-y-1">
+                  <Badge>{scoreResult.recommendation}</Badge>
+                  <p className="text-sm text-muted-foreground">{scoreResult.conversion_probability}</p>
+                </div>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4 text-sm">
+                <p className="font-medium mb-1">Reasoning</p>
+                <p className="text-muted-foreground">{scoreResult.reasoning}</p>
+              </div>
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button onClick={() => setScoreOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Lead Summary</DialogTitle>
+            <DialogDescription>
+              Overview of {lead?.first_name} {lead?.last_name}
+            </DialogDescription>
+          </DialogHeader>
+          {lead ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="font-medium">Name:</span> {lead.first_name} {lead.last_name}</div>
+                <div><span className="font-medium">Email:</span> {lead.email || "—"}</div>
+                <div><span className="font-medium">Mobile:</span> {lead.mobile || "—"}</div>
+                <div><span className="font-medium">Company:</span> {lead.company || "—"}</div>
+                <div><span className="font-medium">Status:</span> {lead.status}</div>
+                <div><span className="font-medium">Priority:</span> {lead.priority}</div>
+                <div><span className="font-medium">Source:</span> {lead.lead_source}</div>
+                <div><span className="font-medium">Value:</span> {lead.estimated_deal_value ? formatCurrency(lead.estimated_deal_value) : "—"}</div>
+                <div><span className="font-medium">Created:</span> {formatDate(lead.created_at)}</div>
+                <div><span className="font-medium">Tags:</span> {lead.tags?.length ? lead.tags.join(", ") : "—"}</div>
+              </div>
+              {lead.notes && (
+                <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+                  <p className="font-medium mb-1">Notes</p>
+                  <p className="text-muted-foreground">{lead.notes}</p>
+                </div>
+              )}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button onClick={() => setSummaryOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Document</DialogTitle>
+            <DialogDescription>Upload a document for {lead?.first_name} {lead?.last_name}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Document Name</label>
+              <Input
+                placeholder="e.g. Contract, ID Proof..."
+                value={uploadName}
+                onChange={(e) => setUploadName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">File</label>
+              <Input
+                type="file"
+                onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setUploadOpen(false); setUploadFile(null); setUploadName(""); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleUploadDocument} disabled={!uploadFile || uploadDocument.isPending}>
+              {uploadDocument.isPending ? "Uploading..." : "Upload"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -56,9 +56,14 @@ async function fetchLead(id: string): Promise<Lead | null> {
 }
 
 async function createLead(input: CreateLeadInput): Promise<Lead> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
   const { data, error } = await supabase
     .from("leads")
-    .insert([input])
+    .insert([{ ...input, organization_id: profile?.organization_id }])
     .select()
     .single();
 

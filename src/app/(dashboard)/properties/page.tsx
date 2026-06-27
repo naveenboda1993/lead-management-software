@@ -288,6 +288,17 @@ export default function PropertiesPage() {
               value={formData.area_sqft || ""}
               onChange={(e) => setFormData((p: any) => ({ ...p, area_sqft: Number(e.target.value) }))}
             />
+            <textarea
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              placeholder="Description"
+              value={formData.description}
+              onChange={(e) => setFormData((p: any) => ({ ...p, description: e.target.value }))}
+            />
+            <Input
+              placeholder="Amenities (comma-separated, e.g. Pool, Gym, Parking)"
+              value={formData.amenities.join(", ")}
+              onChange={(e) => setFormData((p: any) => ({ ...p, amenities: e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean) }))}
+            />
             <Button onClick={handleCreate} disabled={createProperty.isPending}>
               {createProperty.isPending ? "Creating..." : "Create Property"}
             </Button>

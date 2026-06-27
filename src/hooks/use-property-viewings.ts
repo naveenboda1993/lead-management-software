@@ -40,9 +40,14 @@ async function fetchViewingsByLead(leadId: string): Promise<PropertyViewingWithR
 }
 
 async function createPropertyViewing(input: Partial<PropertyViewing>): Promise<PropertyViewing> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
   const { data, error } = await supabase
     .from("property_viewings")
-    .insert([input])
+    .insert([{ ...input, organization_id: profile?.organization_id }])
     .select()
     .single();
   if (error) throw new Error(error.message);

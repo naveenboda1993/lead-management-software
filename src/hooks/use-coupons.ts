@@ -6,6 +6,15 @@ import type { Coupon } from "@/types";
 
 const supabase = createClient();
 
+async function getOrgId() {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+  return profile?.organization_id;
+}
+
 async function fetchCoupons(): Promise<Coupon[]> {
   const { data } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
   return (data ?? []) as Coupon[];
@@ -19,7 +28,7 @@ async function fetchCoupon(id: string): Promise<Coupon | null> {
 async function createCoupon(input: Partial<Coupon>): Promise<Coupon> {
   const { data, error } = await supabase
     .from("coupons")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);

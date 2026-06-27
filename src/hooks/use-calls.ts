@@ -6,6 +6,15 @@ import type { CallLog, VirtualNumber } from "@/types";
 
 const supabase = createClient();
 
+async function getOrgId() {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+  return profile?.organization_id;
+}
+
 export interface CallLogFilters {
   search?: string;
   direction?: string[];
@@ -55,7 +64,7 @@ async function fetchCallLog(id: string): Promise<CallLog | null> {
 async function createCallLog(input: Partial<CallLog>): Promise<CallLog> {
   const { data, error } = await supabase
     .from("call_logs")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);
@@ -70,7 +79,7 @@ async function fetchVirtualNumbers(): Promise<VirtualNumber[]> {
 async function createVirtualNumber(input: Partial<VirtualNumber>): Promise<VirtualNumber> {
   const { data, error } = await supabase
     .from("virtual_numbers")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);

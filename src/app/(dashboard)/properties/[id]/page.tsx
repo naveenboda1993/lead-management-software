@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Edit3, Trash2, Loader2, Plus, Calendar, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Edit3, Trash2, Loader2, Plus, Calendar, CheckCircle, XCircle, Upload, ImageIcon, FileText } from "lucide-react";
 import { useProperty, useUpdateProperty, useDeleteProperty } from "@/hooks/use-properties";
 import { usePropertyInterestsByProperty, useCreatePropertyInterest, useUpdatePropertyInterest, useDeletePropertyInterest } from "@/hooks/use-property-interests";
 import { useViewingsByProperty, useCreatePropertyViewing, useUpdatePropertyViewing } from "@/hooks/use-property-viewings";
 import { useLeads } from "@/hooks/use-leads";
+import { createClient } from "@/lib/supabase/client";
 import type { PropertyType, PropertyStatus } from "@/types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -76,7 +78,14 @@ export default function PropertyDetailPage() {
     bedrooms: 1,
     bathrooms: 1,
     description: "",
+    amenities: [] as string[],
   });
+  const [imageUploadOpen, setImageUploadOpen] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [docUploadOpen, setDocUploadOpen] = useState(false);
+  const [docFile, setDocFile] = useState<File | null>(null);
+  const [docUploading, setDocUploading] = useState(false);
 
   const handleEdit = () => {
     if (!property) return;
@@ -93,6 +102,7 @@ export default function PropertyDetailPage() {
       bedrooms: property.bedrooms,
       bathrooms: property.bathrooms,
       description: property.description ?? "",
+      amenities: property.amenities ?? [],
     });
     setEditing(true);
   };
@@ -167,6 +177,50 @@ export default function PropertyDetailPage() {
       await updateViewing.mutateAsync({ id: viewingId, status: "CANCELLED" });
       toast.success("Viewing cancelled");
     } catch { toast.error("Failed to cancel viewing"); }
+  };
+
+  const supabase = createClient();
+
+  const handleUploadImage = async () => {
+    if (!imageFile || !property) return;
+    setImageUploading(true);
+    try {
+      const ext = imageFile.name.split(".").pop();
+      const filePath = `properties/${propertyId}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("properties").upload(filePath, imageFile);
+      if (uploadError) throw new Error(uploadError.message);
+      const { data: urlData } = supabase.storage.from("properties").getPublicUrl(filePath);
+      const newImages = [...(property.images ?? []), urlData.publicUrl];
+      await updateProperty.mutateAsync({ id: propertyId, images: newImages } as any);
+      toast.success("Image uploaded");
+      setImageUploadOpen(false);
+      setImageFile(null);
+    } catch {
+      toast.error("Failed to upload image");
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const handleUploadDocument = async () => {
+    if (!docFile || !property) return;
+    setDocUploading(true);
+    try {
+      const ext = docFile.name.split(".").pop();
+      const filePath = `properties/${propertyId}/documents/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("properties").upload(filePath, docFile);
+      if (uploadError) throw new Error(uploadError.message);
+      const { data: urlData } = supabase.storage.from("properties").getPublicUrl(filePath);
+      const newDocs = [...(property.documents ?? []), urlData.publicUrl];
+      await updateProperty.mutateAsync({ id: propertyId, documents: newDocs } as any);
+      toast.success("Document uploaded");
+      setDocUploadOpen(false);
+      setDocFile(null);
+    } catch {
+      toast.error("Failed to upload document");
+    } finally {
+      setDocUploading(false);
+    }
   };
 
   const interestLevelColor = (level: string) => {
@@ -253,6 +307,18 @@ export default function PropertyDetailPage() {
                   onChange={(e) => setFormData((p) => ({ ...p, area_sqft: Number(e.target.value) }))}
                 />
               </div>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder="Description"
+                value={formData.description}
+                onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
+              />
+              <input
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder="Amenities (comma-separated)"
+                value={formData.amenities?.join(", ") ?? ""}
+                onChange={(e) => setFormData((p) => ({ ...p, amenities: e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean) }))}
+              />
               <div className="flex gap-3">
                 <Button onClick={handleUpdate} disabled={updateProperty.isPending}>
                   {updateProperty.isPending ? "Saving..." : "Save Changes"}
@@ -381,15 +447,24 @@ export default function PropertyDetailPage() {
 
         <TabsContent value="media">
           <Card>
-            <CardHeader><CardTitle className="text-base">Images & Media</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Images & Media</CardTitle>
+              <Button size="sm" onClick={() => setImageUploadOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Image
+              </Button>
+            </CardHeader>
             <CardContent>
-              {property.images.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No images uploaded</p>
+              {!property.images || property.images.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <ImageIcon className="h-12 w-12 text-muted-foreground/40 mb-2" />
+                  <p className="text-sm text-muted-foreground">No images uploaded</p>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {property.images.map((img, i) => (
-                    <div key={i} className="aspect-video rounded-lg border bg-muted flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground">Image {i + 1}</span>
+                    <div key={i} className="group relative aspect-video rounded-lg border bg-muted overflow-hidden">
+                      <img src={img} alt={`Property image ${i + 1}`} className="h-full w-full object-cover" />
                     </div>
                   ))}
                 </div>
@@ -489,15 +564,26 @@ export default function PropertyDetailPage() {
 
         <TabsContent value="documents">
           <Card>
-            <CardHeader><CardTitle className="text-base">Documents</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Documents</CardTitle>
+              <Button size="sm" onClick={() => setDocUploadOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload
+              </Button>
+            </CardHeader>
             <CardContent>
-              {property.documents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No documents uploaded</p>
+              {!property.documents || property.documents.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <FileText className="h-12 w-12 text-muted-foreground/40 mb-2" />
+                  <p className="text-sm text-muted-foreground">No documents uploaded</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {property.documents.map((doc, i) => (
                     <div key={i} className="flex items-center justify-between rounded-lg border p-3">
-                      <span className="text-sm">{doc}</span>
+                      <a href={doc} target="_blank" rel="noopener noreferrer" className="text-sm hover:underline truncate">
+                        {doc.split("/").pop() || doc}
+                      </a>
                     </div>
                   ))}
                 </div>
@@ -610,6 +696,52 @@ export default function PropertyDetailPage() {
             <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleteLoading}>Cancel</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleteLoading}>
               {deleteLoading ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={imageUploadOpen} onOpenChange={setImageUploadOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Image</DialogTitle>
+            <DialogDescription>Upload an image for {property?.property_name}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Image File</label>
+              <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setImageUploadOpen(false); setImageFile(null); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleUploadImage} disabled={!imageFile || imageUploading}>
+              {imageUploading ? "Uploading..." : "Upload"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={docUploadOpen} onOpenChange={setDocUploadOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Document</DialogTitle>
+            <DialogDescription>Upload a document for {property?.property_name}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Document File</label>
+              <Input type="file" onChange={(e) => setDocFile(e.target.files?.[0] ?? null)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDocUploadOpen(false); setDocFile(null); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleUploadDocument} disabled={!docFile || docUploading}>
+              {docUploading ? "Uploading..." : "Upload"}
             </Button>
           </DialogFooter>
         </DialogContent>

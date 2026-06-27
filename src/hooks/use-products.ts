@@ -6,6 +6,15 @@ import type { Product, Inventory } from "@/types";
 
 const supabase = createClient();
 
+async function getOrgId() {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+  return profile?.organization_id;
+}
+
 export interface ProductFilters {
   search?: string;
   category?: string[];
@@ -55,7 +64,7 @@ async function fetchProduct(id: string): Promise<Product | null> {
 async function createProduct(input: Partial<Product>): Promise<Product> {
   const { data, error } = await supabase
     .from("products")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);

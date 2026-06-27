@@ -6,6 +6,15 @@ import type { Campaign } from "@/types";
 
 const supabase = createClient();
 
+async function getOrgId() {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+  return profile?.organization_id;
+}
+
 export interface CampaignFilters {
   search?: string;
   type?: string[];
@@ -51,7 +60,7 @@ async function fetchCampaign(id: string): Promise<Campaign | null> {
 async function createCampaign(input: Partial<Campaign>): Promise<Campaign> {
   const { data, error } = await supabase
     .from("campaigns")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);

@@ -6,6 +6,15 @@ import type { Supplier } from "@/types";
 
 const supabase = createClient();
 
+async function getOrgId() {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+  return profile?.organization_id;
+}
+
 export interface SupplierFilters {
   search?: string;
   company?: string;
@@ -35,7 +44,7 @@ async function fetchSupplier(id: string): Promise<Supplier | null> {
 async function createSupplier(input: Partial<Supplier>): Promise<Supplier> {
   const { data, error } = await supabase
     .from("suppliers")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);

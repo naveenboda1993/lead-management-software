@@ -6,6 +6,15 @@ import type { User, Attendance, Leave, Payroll, PerformanceReview } from "@/type
 
 const supabase = createClient();
 
+async function getOrgId() {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
+  return profile?.organization_id;
+}
+
 export interface EmployeeFilters {
   search?: string;
   department?: string;
@@ -64,7 +73,7 @@ async function updateAttendance({ id, ...input }: Partial<Attendance> & { id: st
 async function createAttendance(input: Partial<Attendance>): Promise<Attendance> {
   const { data, error } = await supabase
     .from("attendance")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);
@@ -99,7 +108,7 @@ async function updateLeave({ id, ...input }: Partial<Leave> & { id: string }): P
 async function createLeave(input: Partial<Leave>): Promise<Leave> {
   const { data, error } = await supabase
     .from("leaves")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);
@@ -126,7 +135,7 @@ async function fetchPayroll(filters?: { employee_id?: string; month?: number; ye
 async function createPayroll(input: Partial<Payroll>): Promise<Payroll> {
   const { data, error } = await supabase
     .from("payroll")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);
@@ -156,7 +165,7 @@ async function fetchPerformanceReviews(employeeId?: string): Promise<Performance
 async function createPerformanceReview(input: Partial<PerformanceReview>): Promise<PerformanceReview> {
   const { data, error } = await supabase
     .from("performance_reviews")
-    .insert([input])
+    .insert([{ ...input, organization_id: await getOrgId() }])
     .select()
     .single();
   if (error) throw new Error(error.message);

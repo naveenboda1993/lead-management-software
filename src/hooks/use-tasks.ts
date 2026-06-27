@@ -24,9 +24,14 @@ async function fetchTask(id: string): Promise<Task | null> {
 }
 
 async function createTask(input: CreateTaskInput): Promise<Task> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id)
+    .single();
   const { data, error } = await supabase
     .from("tasks")
-    .insert([input])
+    .insert([{ ...input, organization_id: profile?.organization_id }])
     .select()
     .single();
 
