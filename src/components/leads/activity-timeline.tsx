@@ -10,6 +10,7 @@ import {
   RefreshCw,
   CheckCircle,
   XCircle,
+  Edit3,
   Loader2,
 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils/format";
@@ -24,6 +25,7 @@ const ACTIVITY_ICONS: Record<string, typeof Phone> = {
   NOTE: FileText,
   FOLLOW_UP: MessageSquare,
   LEAD_CREATED: UserPlus,
+  LEAD_UPDATED: Edit3,
   STATUS_CHANGE: RefreshCw,
   WON: CheckCircle,
   LOST: XCircle,
@@ -36,6 +38,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
   NOTE: "bg-slate-100 text-slate-600",
   FOLLOW_UP: "bg-teal-100 text-teal-600",
   LEAD_CREATED: "bg-green-100 text-green-600",
+  LEAD_UPDATED: "bg-amber-100 text-amber-600",
   STATUS_CHANGE: "bg-indigo-100 text-indigo-600",
   WON: "bg-emerald-100 text-emerald-600",
   LOST: "bg-red-100 text-red-600",
@@ -69,9 +72,10 @@ export function ActivityTimeline({ activities, loading }: ActivityTimelineProps)
       <div className="relative space-y-0">
         <div className="absolute left-[19px] top-2 bottom-2 w-px bg-border" />
         {activities.map((activity) => {
+          const typeKey = activity.type.toUpperCase();
           const Icon =
-            ACTIVITY_ICONS[activity.type] ?? ActivityIconsDefault;
-          const colorClass = ACTIVITY_COLORS[activity.type] ?? "bg-slate-100 text-slate-600";
+            ACTIVITY_ICONS[typeKey] ?? ActivityIconsDefault;
+          const colorClass = ACTIVITY_COLORS[typeKey] ?? "bg-slate-100 text-slate-600";
 
           return (
             <div key={activity.id} className="relative flex gap-4 pb-6 last:pb-0">
