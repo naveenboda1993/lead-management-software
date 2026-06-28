@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -15,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -36,6 +38,8 @@ interface LeadFormProps {
 
 export function LeadForm({ lead, onSubmit, onCancel, loading }: LeadFormProps) {
   const { user } = useUser();
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>(lead?.tags ?? []);
 
   const {
     register,
@@ -217,6 +221,46 @@ export function LeadForm({ lead, onSubmit, onCancel, loading }: LeadFormProps) {
           rows={4}
           className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           {...register("notes")}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="tags">Tags</Label>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {tags.map((tag, i) => (
+            <Badge key={i} variant="secondary" className="gap-1 pr-1">
+              {tag}
+              <button
+                type="button"
+                className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5 leading-none"
+                onClick={() => {
+                  const updated = tags.filter((_, j) => j !== i);
+                  setTags(updated);
+                  setValue("tags", updated);
+                }}
+              >
+                &times;
+              </button>
+            </Badge>
+          ))}
+        </div>
+        <Input
+          id="tags"
+          placeholder="Type a tag and press Enter"
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const trimmed = tagInput.trim();
+              if (trimmed && !tags.includes(trimmed)) {
+                const updated = [...tags, trimmed];
+                setTags(updated);
+                setValue("tags", updated);
+              }
+              setTagInput("");
+            }
+          }}
         />
       </div>
 

@@ -53,11 +53,12 @@ export function BulkActions({
   const [profiles, setProfiles] = useState<{ id: string; full_name: string; role: string }[]>([]);
 
   useEffect(() => {
-    if (assignOpen) {
-      createClient().from("profiles").select("id, full_name, role").then(({ data }) => {
-        if (data) setProfiles(data);
-      });
-    }
+    if (!assignOpen) return;
+    let cancelled = false;
+    createClient().from("profiles").select("id, full_name, role").then(({ data }) => {
+      if (!cancelled && data) setProfiles(data);
+    });
+    return () => { cancelled = true; };
   }, [assignOpen]);
 
   const allSelected = selectedIds.size === leads.length && leads.length > 0;

@@ -1,7 +1,19 @@
 -- =====================================================
 -- Lead Management CRM - Notifications & Profile Extensions
--- Migration 004: notifications table, profile columns
+-- Migration 004: notifications table, profile columns, role enum
 -- =====================================================
+
+-- Add missing role enum values (lowercase to match existing DB convention)
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'employer';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'manager';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'team_leader';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'employee';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'marketing_executive';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'hr';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'recruiter';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'finance';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'customer';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'vendor';
 
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS department TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS designation TEXT;

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
-import { successResponse, badRequest, serverError } from "@/lib/api/utils";
+import { successResponse, badRequest, serverError, logAuditEvent, extractClientInfo } from "@/lib/api/utils";
 
 const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -80,12 +80,34 @@ export async function POST(request: NextRequest) {
         password,
       });
 
+    const clientInfo = extractClientInfo(request);
+
     if (signInError) {
+      await logAuditEvent(supabase, {
+        action: "REGISTER",
+        entity_type: "auth",
+        entity_id: userId,
+        user_id: userId,
+        organization_id: org.id,
+        changes: clientInfo as unknown as Record<string, unknown>,
+        ip_address: clientInfo.ip,
+      });
+
       return successResponse({
         message: "Account created successfully. Please sign in.",
         user: authData.user,
       });
     }
+
+    await logAuditEvent(supabase, {
+      action: "REGISTER",
+      entity_type: "auth",
+      entity_id: userId,
+      user_id: userId,
+      organization_id: org.id,
+      changes: clientInfo as unknown as Record<string, unknown>,
+      ip_address: clientInfo.ip,
+    });
 
     return successResponse(
       {

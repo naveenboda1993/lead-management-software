@@ -9,6 +9,8 @@ import { QueryProvider } from "@/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toast";
 import { PWARegister } from "@/components/pwa-register";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,6 +32,7 @@ export const metadata: Metadata = {
     maximumScale: 1,
     viewportFit: "cover",
   },
+  icons: { icon: "/icon.svg" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -41,6 +44,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <QueryProvider>
               <TooltipProvider>
                 {children}
+                <SpeedInsights />
+                <Analytics />
                 <Toaster />
                 <PWARegister />
               </TooltipProvider>

@@ -198,6 +198,7 @@ export interface Lead {
   estimated_deal_value?: number | null;
   notes?: string | null;
   tags?: string[] | null;
+  organization_id: string;
   created_at: string;
   updated_at: string;
   assigned_to?: string | null;
@@ -215,6 +216,7 @@ export interface Task {
   status: TaskStatus;
   due_date?: string | null;
   reminder_at?: string | null;
+  organization_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -258,6 +260,7 @@ export interface Activity {
   description: string;
   metadata?: Record<string, unknown> | null;
   created_by?: string | null;
+  organization_id: string;
   created_at: string;
 }
 

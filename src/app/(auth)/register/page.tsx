@@ -7,8 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
-import { useAuth } from "@/providers/auth-provider";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +23,6 @@ import { toast } from "@/components/ui/toast";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,17 +38,39 @@ export default function RegisterPage() {
     setLoading(true);
     setError(null);
 
-    const { error: signUpError } = await signUp(data.email, data.password, data.name);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          full_name: data.name,
+          organization_name: data.organization_name,
+        }),
+      });
 
-    if (signUpError) {
-      setError(signUpError);
-      toast.error(signUpError);
-      return;
+      const json = await res.json();
+
+      if (!json.success) {
+        setError(json.error);
+        toast.error(json.error);
+        setLoading(false);
+        return;
+      }
+
+      toast.success("Account created successfully!");
+      if (json.data?.session) {
+        router.push("/dashboard");
+      } else {
+        router.push("/login");
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Registration failed";
+      setError(msg);
+      toast.error(msg);
+      setLoading(false);
     }
-
-    toast.success("Account created! Please check your email to confirm.");
-    router.push("/login");
   };
 
   const handleGoogleRegister = () => {
@@ -160,6 +179,18 @@ export default function RegisterPage() {
             />
             {errors.confirmPassword && (
               <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="organization_name">Organization Name</Label>
+            <Input
+              id="organization_name"
+              placeholder="Your Company Inc."
+              {...register("organization_name")}
+            />
+            {errors.organization_name && (
+              <p className="text-xs text-destructive">{errors.organization_name.message}</p>
             )}
           </div>
 

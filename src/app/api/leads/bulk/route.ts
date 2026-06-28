@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import {
   getAuthenticatedUser,
   getOrganizationId,
-  logAuditEvent,
   successResponse,
   badRequest,
   forbidden,
@@ -70,16 +69,6 @@ export async function POST(request: NextRequest) {
 
         if (assignError) return serverError(assignError);
 
-        for (const leadId of validIds) {
-          await logAuditEvent(supabase, {
-            action: "ASSIGN",
-            entity_type: "lead",
-            entity_id: leadId,
-            user_id: user.id,
-            changes: { assigned_to: assignee_id },
-          });
-        }
-
         return successResponse({
           message: `Assigned ${validIds.length} lead(s) successfully`,
           count: validIds.length,
@@ -99,15 +88,6 @@ export async function POST(request: NextRequest) {
 
         if (deleteError) return serverError(deleteError);
 
-        for (const leadId of validIds) {
-          await logAuditEvent(supabase, {
-            action: "BULK_DELETE",
-            entity_type: "lead",
-            entity_id: leadId,
-            user_id: user.id,
-          });
-        }
-
         return successResponse({
           message: `Deleted ${validIds.length} lead(s) successfully`,
           count: validIds.length,
@@ -120,14 +100,6 @@ export async function POST(request: NextRequest) {
           .select("*")
           .in("id", validIds)
           .eq("organization_id", orgId);
-
-        await logAuditEvent(supabase, {
-          action: "EXPORT",
-          entity_type: "lead",
-          entity_id: "bulk",
-          user_id: user.id,
-          changes: { lead_ids: validIds },
-        });
 
         return successResponse({
           leads: exportData ?? [],

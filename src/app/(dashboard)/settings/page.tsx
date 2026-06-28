@@ -81,10 +81,21 @@ export default function SettingsPage() {
     if (can("read", "user")) {
       (async () => {
         const { data } = await supabase
-          .from("users")
+          .from("profiles")
           .select("*")
           .order("created_at", { ascending: false });
-        if (data) setUsers(data as UserType[]);
+        if (data) {
+          setUsers(data.map((p: Record<string, unknown>) => ({
+            id: p.id as string,
+            email: (p.email as string) ?? "",
+            name: (p.full_name as string) ?? (p.name as string) ?? "",
+            role: ((p.role as string) ?? "").toUpperCase() as LeadStatus as unknown as UserType["role"],
+            avatar_url: (p.avatar_url as string) ?? null,
+            phone: (p.phone as string) ?? null,
+            created_at: (p.created_at as string) ?? "",
+            updated_at: (p.updated_at as string) ?? "",
+          })) as UserType[]);
+        }
       })();
     }
   }, [can]);
@@ -94,8 +105,8 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from("users")
-        .update({ name: profileName })
+        .from("profiles")
+        .update({ full_name: profileName })
         .eq("id", user.id);
       if (error) throw new Error(error.message);
       toast.success("Profile updated successfully");

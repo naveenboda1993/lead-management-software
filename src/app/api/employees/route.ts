@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       query = query.or(
-        `name.ilike.%${search}%,email.ilike.%${search}%,employee_id.ilike.%${search}%`
+        `full_name.ilike.%${search}%,email.ilike.%${search}%,employee_id.ilike.%${search}%`
       );
     }
     if (department) {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const to = from + limit - 1;
 
     const { data, count, error } = await query
-      .order("name", { ascending: true })
+      .order("full_name", { ascending: true })
       .range(from, to);
 
     if (error) return serverError(error);

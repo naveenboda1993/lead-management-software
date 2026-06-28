@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import {
   getAuthenticatedUser,
   getOrganizationId,
-  logAuditEvent,
   successResponse,
   notFound,
   serverError,
@@ -24,19 +23,10 @@ export async function GET(
       .from("documents")
       .select("*")
       .eq("id", id)
+      .eq("organization_id", orgId)
       .single();
 
     if (error || !doc) return notFound("Document");
-
-    if (doc.lead_id) {
-      const { data: lead } = await supabase
-        .from("leads")
-        .select("organization_id")
-        .eq("id", doc.lead_id)
-        .single();
-
-      if (!lead || lead.organization_id !== orgId) return notFound("Document");
-    }
 
     const { data: signedUrlData } = await supabase.storage
       .from("documents")
@@ -67,19 +57,10 @@ export async function DELETE(
       .from("documents")
       .select("*")
       .eq("id", id)
+      .eq("organization_id", orgId)
       .single();
 
     if (fetchError || !doc) return notFound("Document");
-
-    if (doc.lead_id) {
-      const { data: lead } = await supabase
-        .from("leads")
-        .select("organization_id")
-        .eq("id", doc.lead_id)
-        .single();
-
-      if (!lead || lead.organization_id !== orgId) return notFound("Document");
-    }
 
     if (doc.file_path) {
       await supabase.storage.from("documents").remove([doc.file_path]);
@@ -91,13 +72,6 @@ export async function DELETE(
       .eq("id", id);
 
     if (deleteError) return serverError(deleteError);
-
-    await logAuditEvent(supabase, {
-      action: "DELETE",
-      entity_type: "document",
-      entity_id: id,
-      user_id: user.id,
-    });
 
     return successResponse({ message: "Document deleted successfully" });
   } catch (error) {

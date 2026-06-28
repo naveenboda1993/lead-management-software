@@ -1,16 +1,38 @@
+import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getAuthenticatedUser, successResponse, serverError } from "@/lib/api/utils";
+import { getAuthenticatedUser, successResponse, serverError, logAuditEvent, extractClientInfo } from "@/lib/api/utils";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    const { supabase, error: authError } = await getAuthenticatedUser();
-    if (authError) {
-      const supabaseLocal = await createClient();
-      await supabaseLocal.auth.signOut();
-      return successResponse({ message: "Signed out" });
+    const { user, supabase } = await getAuthenticatedUser();
+
+    if (user) {
+      const clientInfo = extractClientInfo(request);
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.organization_id) {
+        await logAuditEvent(supabase, {
+          action: "LOGOUT",
+          entity_type: "auth",
+          entity_id: user.id,
+          user_id: user.id,
+          organization_id: profile.organization_id,
+          changes: clientInfo as unknown as Record<string, unknown>,
+          ip_address: clientInfo.ip,
+        });
+      }
+
+      await supabase.auth.signOut();
+    } else {
+      const c = await createClient();
+      await c.auth.signOut();
     }
 
-    await supabase.auth.signOut();
     return successResponse({ message: "Signed out successfully" });
   } catch (error) {
     return serverError(error);

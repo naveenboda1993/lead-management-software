@@ -4,7 +4,6 @@ import {
   getAuthenticatedUser,
   getOrganizationId,
   logActivity,
-  logAuditEvent,
   generateLeadNumber,
   successResponse,
   badRequest,
@@ -138,14 +137,6 @@ export async function POST(request: NextRequest) {
       description: `Lead ${lead.first_name} ${lead.last_name} was created`,
       created_by: user.id,
       metadata: { lead_number: leadNumber },
-    });
-
-    await logAuditEvent(supabase, {
-      action: "CREATE",
-      entity_type: "lead",
-      entity_id: lead.id,
-      user_id: user.id,
-      changes: parsed.data as unknown as Record<string, unknown>,
     });
 
     return successResponse(lead, 201);

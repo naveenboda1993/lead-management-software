@@ -5,7 +5,6 @@ import { createLeadSchema } from "@/lib/validations/lead";
 import {
   getAuthenticatedUser,
   getOrganizationId,
-  logAuditEvent,
   generateLeadNumber,
   successResponse,
   badRequest,
@@ -111,19 +110,6 @@ export async function POST(request: NextRequest) {
       if (insertError) return serverError(insertError);
       insertedCount = validLeads.length;
     }
-
-    await logAuditEvent(supabase, {
-      action: "IMPORT",
-      entity_type: "lead",
-      entity_id: "bulk_import",
-      user_id: user.id,
-      changes: {
-        total: rows.length,
-        inserted: insertedCount,
-        failed: failedRows.length,
-        duplicates: duplicateCount,
-      },
-    });
 
     return successResponse({
       summary: {
